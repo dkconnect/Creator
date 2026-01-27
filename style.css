@@ -10,3 +10,13 @@ canvas {
   margin-top: 20px;
   border: 2px solid #555;
 }
+
+#ui, #patternSelect {
+  margin-bottom: 10px;
+}
+
+button, select {
+  margin-left: 8px;
+  padding: 6px 10px;
+  font-size: 14px;
+}
