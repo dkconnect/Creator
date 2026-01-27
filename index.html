@@ -1,14 +1,47 @@
+ 
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Scarlett - Working</title>
+  <title>Creator X</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <h1>Scarlett - Working</h1>
-  <canvas id="board" width="640" height="640"></canvas>
 
-  <script src="game.js"></script>
+<h1>Creator X</h1>
+
+<div id="patternSelect">
+  <label>Pattern:</label>
+  <select id="pattern">
+    <option value="X">X</option>
+
+    <option value="0">0</option>
+    <option value="1">1</option>
+  </select>
+
+  <label>Mode:</label>
+  <select id="mode">
+    <option value="HUMAN">Human vs Human</option>
+    <option value="AI">Human vs AI</option>
+  </select>
+
+  <label>You play as:</label>
+  <select id="side">
+    <option value="C">Creator</option>
+    <option value="D">Destroyer</option>
+  </select>
+
+  <button id="startBtn">Start Game</button>
+</div>
+
+<div id="ui">
+  <span id="turn"></span>
+  <span id="dice"></span>
+  <button id="rollBtn">Roll Dice</button>
+</div>
+
+<canvas id="board" width="640" height="640"></canvas>
+
+<script src="game.js"></script>
 </body>
 </html>
