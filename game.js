@@ -168,7 +168,8 @@ canvas.onclick = e => {
   const col = Math.floor((e.clientX - rect.left) / CELL);
   const row = Math.floor((e.clientY - rect.top) / CELL);
 
-  if (!selectedPawn && board[row][col] === currentPlayer) {
+  // reworking on pawns logic bitch is doing drama ughhhhh
+  if (board[row][col] === currentPlayer) {
     selectedPawn = { row, col };
     validMoves = getValidMoves(row, col);
     return;
