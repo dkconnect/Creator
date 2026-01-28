@@ -1,0 +1,112 @@
+:root {
+  --grid: #b7ff5a;
+  --creator: #4da6ff;
+  --destroyer: #ff4d4d;
+  --bg: #000;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: black;
+  color: white;
+  font-family: Montserrat, sans-serif;
+}
+
+#game-root {
+  display: flex;
+  height: 100vh;
+}
+
+/* left side */
+#board-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+#title {
+  font-family: "Cinzel Decorative", serif;
+  font-size: 64px;
+  color: #9cff57;
+  text-shadow: 0 0 25px rgba(156,255,87,0.7);
+  margin-bottom: 20px;
+}
+
+canvas {
+  background: black;
+  border: 3px solid var(--grid);
+}
+
+/* right panel */
+#ui-panel {
+  width: 320px;
+  background: linear-gradient(180deg, #020b14, #000);
+  border-left: 2px solid #0f1f2f;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 30px 20px;
+}
+
+.ui-block {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.ui-label {
+  font-size: 12px;
+  letter-spacing: 0.3em;
+  color: #8aff3d;
+  margin-bottom: 10px;
+}
+
+.ui-value {
+  font-family: "Cinzel Decorative", serif;
+  font-size: 20px;
+}
+
+.dice-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.dice {
+  width: 80px;
+  height: 80px;
+  border: 3px solid #8aff3d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  margin-bottom: 15px;
+}
+
+button {
+  background: transparent;
+  border: 2px solid #8aff3d;
+  color: #8aff3d;
+  padding: 10px 20px;
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+footer {
+  margin-top: auto;
+  text-align: center;
+  font-size: 10px;
+  color: #4cff00;
+  letter-spacing: 0.15em;
+}
