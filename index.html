@@ -1,47 +1,99 @@
- 
+
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
   <meta charset="UTF-8" />
-  <title>Creator X</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CREATOR</title>
+
+  <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Montserrat:wght@300;400;600&family=Material+Icons&display=swap" rel="stylesheet"/>
+
+  <link rel="stylesheet" href="style.css"/>
+  <script defer src="ui.js"></script>
 </head>
-<body>
 
-<h1>Creator X</h1>
+<body class="bg-[#0A0A0C] text-gray-100 font-sans min-h-screen">
 
-<div id="patternSelect">
-  <label>Pattern:</label>
-  <select id="pattern">
-    <option value="X">X</option>
+<div class="bg-blur primary"></div>
+<div class="bg-blur accent"></div>
 
-    <option value="0">0</option>
-    <option value="1">1</option>
-  </select>
+<main class="relative z-10 min-h-screen flex flex-col items-center justify-between py-12 px-4">
 
-  <label>Mode:</label>
-  <select id="mode">
-    <option value="HUMAN">Human vs Human</option>
-    <option value="AI">Human vs AI</option>
-  </select>
+  <header class="text-center space-y-3">
+    <h1 class="font-display text-7xl md:text-9xl text-primary tracking-widest glow">
+      CREATOR
+    </h1>
+    <p class="italic text-accent/80 tracking-wide">
+      A pattern of mind. A war of memory.
+    </p>
+  </header>
 
-  <label>You play as:</label>
-  <select id="side">
-    <option value="C">Creator</option>
-    <option value="D">Destroyer</option>
-  </select>
+  <section class="glass-panel max-w-4xl w-full p-8 grid grid-cols-1 md:grid-cols-2 gap-6 mt-10">
 
-  <button id="startBtn">Start Game</button>
-</div>
+    <div class="md:col-span-2">
+      <label class="label">Play As</label>
+      <select id="roleSelect" class="select">
+        <option value="C">Creator</option>
+        <option value="D">Destroyer</option>
+      </select>
+    </div>
 
-<div id="ui">
-  <span id="turn"></span>
-  <span id="dice"></span>
-  <button id="rollBtn">Roll Dice</button>
-</div>
+ 
+    <div>
+      <label class="label">Game Mode</label>
+      <select id="modeSelect" class="select">
+        <option value="AI">Human vs AI</option>
+        <option value="HUMAN">Human vs Human</option>
+      </select>
+    </div>
 
-<canvas id="board" width="640" height="640"></canvas>
+    
+    <div>
+      <label class="label">Difficulty</label>
+      <select id="difficultySelect" class="select">
+        <option value="NORMAL">Normal Intelligence</option>
+        <option value="ADVANCED">Advanced Logic</option>
+        <option value="OVERPOWERED">Overpowered AI</option>
+      </select>
+    </div>
 
-<script src="game.js"></script>
+   
+    <div class="md:col-span-2">
+      <label class="label">Pattern Category</label>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <button class="pattern-cat-btn" data-category="alphabets">Alphabets</button>
+        <button class="pattern-cat-btn" data-category="numbers">Numbers</button>
+        <button class="pattern-cat-btn" data-category="symbols">Characters</button>
+        <button class="pattern-cat-btn" data-category="shapes">Shapes</button>
+      </div>
+    </div>
+
+    <div id="patternPicker" class="md:col-span-2 hidden">
+      <label class="label">Select Pattern</label>
+      <select id="patternSelect" class="select"></select>
+    </div>
+
+    <div class="md:col-span-2 text-center text-xs uppercase tracking-widest text-primary/60">
+      Configure the rules. Shape the board.
+    </div>
+   
+    <div class="md:col-span-2">
+      <button id="startBtn" class="start-btn" disabled>
+        Start Game
+        <span class="material-icons">play_arrow</span>
+      </button>
+    </div>
+
+  </section>
+
+  <footer class="text-xs tracking-[0.3em] uppercase text-gray-500 mt-12">
+    © 2026 — Dibyanshu | Lucifer - CREATOR GAME
+  </footer>
+
+</main>
 </body>
 </html>
