@@ -1,4 +1,4 @@
-
+// ok ths is working for now lets stop here and build the ai
 // Copyright - 2026
 // The Creator Game
 // Dibyanshu & Lucifer
