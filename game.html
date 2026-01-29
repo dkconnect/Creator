@@ -16,18 +16,28 @@
 
 <div id="game-root">
 
-  <!-- left side -->
+
   <div id="board-panel">
-    <h1 id="title">Creator</h1>
+    <h1 id="title">CREATOR</h1>
     <canvas id="board" width="640" height="640"></canvas>
   </div>
 
-  <!-- right side -->
   <div id="ui-panel">
 
     <div class="ui-block">
       <div class="ui-label">Current Turn</div>
       <div id="turnDisplay" class="ui-value">CREATOR'S TURN</div>
+    </div>
+
+    <div class="ui-block timer-block">
+      <div class="timer-ring">
+        <svg width="120" height="120">
+          <circle cx="60" cy="60" r="54" />
+          <circle id="timerCircle" cx="60" cy="60" r="54" />
+        </svg>
+        <div id="timerDisplay">30</div>
+      </div>
+      <div id="phaseLabel">ROLL</div>
     </div>
 
     <div class="ui-block dice-block">
@@ -36,16 +46,13 @@
     </div>
 
     <footer>
-      <div>COPYRIGHT — 2026</div>
-      <div>CREATOR GAME</div>
+      <div>© 2026 CREATOR</div>
       <div>DIBYANSHU | LUCIFER</div>
     </footer>
 
   </div>
-
 </div>
 
-<!-- js files and patterm one added -->
 <script src="patterns.js"></script>
 <script src="game-ai.js"></script>
 <script src="game.js"></script>
