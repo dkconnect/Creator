@@ -1,4 +1,6 @@
+// STILL UNDER DEVELOPMENT
 
+// STABLE RELEASE V.1
 const CONFIG = JSON.parse(
   localStorage.getItem("CREATOR_GAME_CONFIG")
 );
@@ -43,7 +45,7 @@ function buildPattern8(raw) {
   const grid = Array.from({ length: GRID_SIZE }, () =>
     Array(GRID_SIZE).fill(false)
   );
-  const off = (GRID_SIZE - 8) / 2;
+  const off = Math.floor((GRID_SIZE - 8) / 2);
   for (let r = 0; r < 8; r++)
     for (let c = 0; c < 8; c++)
       if (raw[r][c]) grid[off + r][off + c] = true;
@@ -52,9 +54,11 @@ function buildPattern8(raw) {
 
 function resetBoard() {
   board.forEach(r => r.fill(null));
+
   for (let r = 0; r < 2; r++)
     for (let c = 0; c < GRID_SIZE; c++)
       board[r][c] = "C";
+
   for (let r = GRID_SIZE - 2; r < GRID_SIZE; r++)
     for (let c = 0; c < GRID_SIZE; c++)
       board[r][c] = "D";
@@ -79,11 +83,9 @@ function startTimer(seconds, onExpire) {
 function updateTimerVisual(max) {
   timerDisplay.textContent = timeLeft;
   const pct = timeLeft / max;
-  const dash = 339.29 * (1 - pct);
-  timerCircle.style.strokeDashoffset = dash;
+  timerCircle.style.strokeDashoffset = 339.29 * (1 - pct);
 
   timerBlock.classList.remove("timer-warning", "timer-danger");
-
   if (timeLeft <= 3) timerBlock.classList.add("timer-danger");
   else if (timeLeft <= 7) timerBlock.classList.add("timer-warning");
 }
@@ -91,6 +93,14 @@ function updateTimerVisual(max) {
 function startRollPhase() {
   phase = "ROLL";
   phaseLabel.textContent = "ROLL";
+
+  if (CONFIG.mode === "AI" && currentPlayer !== CONFIG.role) {
+    setTimeout(aiMove, 500);
+    return;
+  }
+
+  rollBtn.disabled = false;
+
   startTimer(10, () => {
     if (!diceRoll) {
       rollDice();
@@ -102,6 +112,7 @@ function startRollPhase() {
 function startMovePhase() {
   phase = "MOVE";
   phaseLabel.textContent = "MOVE";
+
   startTimer(20, () => {
     selectedPawn = null;
     validMoves = [];
@@ -123,19 +134,7 @@ function switchTurn() {
   selectedPawn = null;
   validMoves = [];
 
-  rollBtn.disabled =
-    CONFIG.mode === "AI" && currentPlayer !== CONFIG.role;
-
   updateUI();
-
-  if (
-    CONFIG.mode === "AI" &&
-    currentPlayer !== CONFIG.role
-  ) {
-    setTimeout(aiMove, 500);
-    return;
-  }
-
   startRollPhase();
 }
 
@@ -148,8 +147,49 @@ function updateUI() {
   diceDisplay.textContent = diceRoll ?? "–";
 }
 
+function getValidMoves(r, c) {
+  if (!diceRoll) return [];
+
+  const dirs = [
+    [1,0],[-1,0],[0,1],[0,-1],
+    [1,1],[1,-1],[-1,1],[-1,-1]
+  ];
+
+  return dirs
+    .map(([dr, dc]) => ({
+      row: r + dr * diceRoll,
+      col: c + dc * diceRoll
+    }))
+    .filter(m =>
+      m.row >= 0 && m.row < GRID_SIZE &&
+      m.col >= 0 && m.col < GRID_SIZE &&
+      board[m.row][m.col] !== currentPlayer
+    );
+}
+
+function sendPawnHome(player) {
+  const rows = player === "C"
+    ? [0, 1]
+    : [GRID_SIZE - 2, GRID_SIZE - 1];
+
+  for (let r of rows)
+    for (let c = 0; c < GRID_SIZE; c++)
+      if (!board[r][c]) {
+        board[r][c] = player;
+        return;
+      }
+}
+
+function checkWin(p) {
+  for (let r = 0; r < GRID_SIZE; r++)
+    for (let c = 0; c < GRID_SIZE; c++)
+      if (pattern[r][c] && board[r][c] !== p)
+        return false;
+  return true;
+}
+
 rollBtn.onclick = () => {
-  if (!diceRoll && phase === "ROLL" && !gameOver) {
+  if (phase === "ROLL" && !diceRoll && !gameOver) {
     rollDice();
     startMovePhase();
   }
@@ -202,6 +242,7 @@ function draw() {
     ctx.moveTo(i*CELL,0);
     ctx.lineTo(i*CELL,canvas.height);
     ctx.stroke();
+
     ctx.beginPath();
     ctx.moveTo(0,i*CELL);
     ctx.lineTo(canvas.width,i*CELL);
@@ -235,3 +276,5 @@ function draw() {
   requestAnimationFrame(draw);
 }
 draw();
+
+
