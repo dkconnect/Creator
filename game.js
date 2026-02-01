@@ -5,16 +5,16 @@
 //WORKING V.2 - ADDING FIREBASE
 
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "your-app.firebaseapp.com",
-  databaseURL: "https://your-app-default-rtdb.firebaseio.com",
-  projectId: "your-app",
-  storageBucket: "your-app.appspot.com",
-  messagingSenderId: "...",
-  appId: "..."
+    apiKey: "AIzaSyDZB8Bp3wWEDCMTWK8HRWFS3P4Al5qasu8",
+    authDomain: "the-creator-game.firebaseapp.com",
+    projectId: "the-creator-game",
+    storageBucket: "the-creator-game.firebasestorage.app",
+    messagingSenderId: "195933793096",
+    appId: "1:195933793096:web:0a9588c723c23a353aa17d",
+    measurementId: "G-KRFRHN13YM"
 };
 
-// Initialize Firebase
+// Initialize Firebase (Compat Version)
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
