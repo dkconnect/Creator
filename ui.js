@@ -1,3 +1,5 @@
+// STABLE UI FOR NOW
+
 const PATTERNS = {
   alphabets: [..."ABCDEFGHIJKLMNOPQRSTUVWXYZ"],
   numbers: ["0","1","2","3","4","5","6","7","8","9"],
@@ -12,12 +14,19 @@ const patternButtons = document.querySelectorAll(".pattern-cat-btn");
 const patternPicker = document.getElementById("patternPicker");
 const patternSelect = document.getElementById("patternSelect");
 const startBtn = document.getElementById("startBtn");
+const modeSelect = document.getElementById("modeSelect");
+const joinSection = document.getElementById("joinSection");
+const roomCodeInput = document.getElementById("roomCodeInput");
+const roleSelect = document.getElementById("roleSelect");
 
 patternButtons.forEach(btn => {
   btn.addEventListener("click", () => {
+
     patternButtons.forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
+
     selectedCategory = btn.dataset.category;
+  
     patternSelect.innerHTML = "";
     PATTERNS[selectedCategory].forEach(p => {
       const opt = document.createElement("option");
@@ -25,6 +34,7 @@ patternButtons.forEach(btn => {
       opt.textContent = p;
       patternSelect.appendChild(opt);
     });
+
     selectedPattern = PATTERNS[selectedCategory][0];
     patternPicker.classList.remove("hidden");
     validate();
@@ -36,6 +46,15 @@ patternSelect.addEventListener("change", e => {
   validate();
 });
 
+modeSelect.addEventListener("change", () => {
+  if (modeSelect.value === "HUMAN") {
+    joinSection.classList.remove("hidden");
+  } else {
+    joinSection.classList.add("hidden");
+    roomCodeInput.value = ""; 
+  }
+});
+
 function validate() {
   startBtn.disabled = !(selectedCategory && selectedPattern);
 }
@@ -45,21 +64,21 @@ function generateRoomCode() {
 }
 
 startBtn.addEventListener("click", () => {
-  const mode = document.getElementById("modeSelect").value;
-  let roomCode = "LOCAL";
-  let role = document.getElementById("roleSelect").value;
+  const mode = modeSelect.value;
+  let role = roleSelect.value;
+  let roomCode = roomCodeInput.value.trim().toUpperCase();
+
 
   if (mode === "HUMAN") {
-    const isHosting = confirm("OK to HOST (Code will be generated) | Cancel to JOIN (Enter a code)");
-    if (isHosting) {
+    if (!roomCode) {
       roomCode = generateRoomCode();
       role = "C"; 
-      alert("ROOM CODE: " + roomCode + "\nShare this with Player 2!");
+      alert(`ROOM CREATED!\nCode: ${roomCode}\n\nGive this code to your friend. They must enter it in their 'Room Code' box to join.`);
     } else {
-      roomCode = prompt("Enter 6-digit Room Code:");
-      role = "D";
-      if (!roomCode) return;
+      role = "D"; 
     }
+  } else {
+    roomCode = "LOCAL";
   }
 
   const config = {
@@ -68,9 +87,11 @@ startBtn.addEventListener("click", () => {
     difficulty: document.getElementById("difficultySelect").value,
     patternCategory: selectedCategory,
     patternId: selectedPattern,
-    roomCode: roomCode.trim().toUpperCase()
+    roomCode: roomCode
   };
 
   localStorage.setItem("CREATOR_GAME_CONFIG", JSON.stringify(config));
+  
+  // START
   window.location.href = "game.html";
 });
