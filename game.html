@@ -4,29 +4,29 @@
   <meta charset="UTF-8" />
   <title>CREATOR — Game</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-
   <link rel="stylesheet" href="game.css" />
-
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Montserrat:wght@400;600&display=swap" rel="stylesheet"/>
 </head>
-
 <body>
 
 <div id="game-root">
-
-
   <div id="board-panel">
     <h1 id="title">CREATOR</h1>
     <canvas id="board" width="640" height="640"></canvas>
   </div>
 
   <div id="ui-panel">
+    <div class="ui-block">
+      <div class="ui-label">Room / Role</div>
+      <div id="roomDisplay" class="ui-value" style="color:#b7ff5a">LOCAL</div>
+      <div id="roleDisplay" class="ui-label" style="margin-top:4px">SINGLE PLAYER</div>
+    </div>
 
     <div class="ui-block">
       <div class="ui-label">Current Turn</div>
-      <div id="turnDisplay" class="ui-value">CREATOR'S TURN</div>
+      <div id="turnDisplay" class="ui-value">WAITING...</div>
     </div>
 
     <div class="ui-block timer-block">
@@ -37,7 +37,7 @@
         </svg>
         <div id="timerDisplay">30</div>
       </div>
-      <div id="phaseLabel">ROLL</div>
+      <div id="phaseLabel">SYNC</div>
     </div>
 
     <div class="ui-block dice-block">
@@ -49,7 +49,6 @@
       <div>© 2026 CREATOR</div>
       <div>DIBYANSHU | LUCIFER</div>
     </footer>
-
   </div>
 </div>
 
@@ -57,7 +56,6 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 
 <script src="patterns.js"></script>
-<script src="game-ai.js"></script>
 <script src="game.js"></script>
 
 </body>
