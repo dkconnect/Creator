@@ -1,6 +1,23 @@
 // STILL UNDER DEVELOPMENT
 
 // STABLE RELEASE V.1
+
+//WORKING V.2 - ADDING FIREBASE
+
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "your-app.firebaseapp.com",
+  databaseURL: "https://your-app-default-rtdb.firebaseio.com",
+  projectId: "your-app",
+  storageBucket: "your-app.appspot.com",
+  messagingSenderId: "...",
+  appId: "..."
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
 const CONFIG = JSON.parse(
   localStorage.getItem("CREATOR_GAME_CONFIG")
 );
