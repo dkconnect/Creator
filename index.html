@@ -44,17 +44,15 @@
     <div>
       <label class="label">Game Mode</label>
       <select id="modeSelect" class="select">
-        <option value="AI">Human vs AI</option>
-        <option value="HUMAN">Human vs Human</option>
+        <option value="LOCAL">Local (Hotseat)</option>
+     
       </select>
     </div>
 
     <div>
       <label class="label">Difficulty</label>
-      <select id="difficultySelect" class="select">
-        <option value="NORMAL">Normal Intelligence</option>
-        <option value="ADVANCED">Advanced Logic</option>
-        <option value="OVERPOWERED">Overpowered AI</option>
+      <select id="difficultySelect" class="select" disabled>
+        <option value="NORMAL">Normal</option>
       </select>
     </div>
 
@@ -71,26 +69,6 @@
     <div id="patternPicker" class="md:col-span-2 hidden">
       <label class="label">Select Pattern</label>
       <select id="patternSelect" class="select"></select>
-    </div>
-
-    <div id="multiplayerBox" class="md:col-span-2 hidden space-y-4">
-
-      <button id="createGameBtn" class="start-btn">
-        Create Game
-        <span class="material-icons">add</span>
-      </button>
-
-      <div class="flex gap-3">
-        <input
-          id="joinCodeInput"
-          class="select"
-          placeholder="Enter Join Code"
-        />
-        <button id="joinGameBtn" class="start-btn">
-          Join
-        </button>
-      </div>
-
     </div>
 
     <div class="md:col-span-2">
