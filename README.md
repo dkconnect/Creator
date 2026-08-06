@@ -1,6 +1,6 @@
 <div align="center">
 
-# CREATOR
+# CREATOR (Shifting to Python)
 ### *A Pattern of Mind. A War of Memory.*
 
 [![Live Game](https://img.shields.io/badge/Live_Game-Vercel-8B5CF6?style=for-the-badge&logo=vercel)](https://creator-dun.vercel.app)
