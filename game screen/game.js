@@ -1,5 +1,3 @@
-//REVERT
-
 const CONFIG = JSON.parse(localStorage.getItem("CREATOR_GAME_CONFIG") || "{}");
 
 const canvas = document.getElementById("board");
@@ -17,20 +15,20 @@ const turnDisplay = document.getElementById("turnDisplay");
 let board = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(null));
 let pattern = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(false));
 
-let currentPlayer = "C";           
-let myRole = CONFIG.role || "C";   
+let currentPlayer = "C";
+let myRole = CONFIG.role || "C";
 let diceRoll = null;
 let selectedPawn = null;
 let validMoves = [];
+let gameOver = false;
 
 function loadPattern() {
   try {
     const cat = CONFIG.patternCategory;
-    const id  = CONFIG.patternId;
+    const id = CONFIG.patternId;
 
     if (!cat || !id || typeof PATTERNS === 'undefined') {
       console.warn("No pattern data - using fallback X pattern");
-     
       for (let i = 0; i < PATTERN_SIZE; i++) {
         pattern[OFFSET + i][OFFSET + i] = true;
         pattern[OFFSET + i][OFFSET + PATTERN_SIZE - 1 - i] = true;
@@ -41,7 +39,6 @@ function loadPattern() {
     const raw = PATTERNS[cat]?.[id];
     if (!raw || !Array.isArray(raw) || raw.length !== 7) {
       console.warn("Invalid pattern - using fallback");
- 
       for (let i = 0; i < PATTERN_SIZE; i++) {
         pattern[OFFSET + i][OFFSET + i] = true;
         pattern[OFFSET + i][OFFSET + PATTERN_SIZE - 1 - i] = true;
@@ -57,22 +54,20 @@ function loadPattern() {
       }
     }
 
-    console.log("Pattern loaded:", cat, id);
+    console.log("Pattern loaded successfully:", cat, id);
   } catch (e) {
-    console.error("Pattern error:", e);
+    console.error("Pattern load error:", e);
   }
 }
 
 function resetBoard() {
   board.forEach(row => row.fill(null));
 
-
   for (let r = 0; r < 2; r++) {
     for (let c = 0; c < GRID_SIZE; c++) {
       board[r][c] = "C";
     }
   }
-
 
   for (let r = GRID_SIZE - 2; r < GRID_SIZE; r++) {
     for (let c = 0; c < GRID_SIZE; c++) {
@@ -107,7 +102,6 @@ function getValidMoves(r, c) {
     const nr = r + dr * diceRoll;
     const nc = c + dc * diceRoll;
     if (nr >= 0 && nr < GRID_SIZE && nc >= 0 && nc < GRID_SIZE) {
-     
       if (board[nr][nc] !== currentPlayer) {
         moves.push({ row: nr, col: nc });
       }
@@ -128,14 +122,23 @@ function returnPawnHome(player) {
       }
     }
   }
-  
   return false;
+}
+
+function checkWin(player) {
+  for (let r = 0; r < GRID_SIZE; r++) {
+    for (let c = 0; c < GRID_SIZE; c++) {
+      if (pattern[r][c] && board[r][c] !== player) {
+        return false;
+      }
+    }
+  }
+  return true;
 }
 
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  
   ctx.strokeStyle = "#b7ff5a";
   ctx.lineWidth = 1;
   for (let i = 0; i <= GRID_SIZE; i++) {
@@ -156,7 +159,6 @@ function draw() {
     }
   }
 
-
   if (selectedPawn && validMoves.length > 0) {
     ctx.fillStyle = "rgba(100, 180, 255, 0.35)";
     validMoves.forEach(m => {
@@ -173,7 +175,6 @@ function draw() {
         ctx.arc(c * CELL + CELL/2, r * CELL + CELL/2, CELL * 0.38, 0, Math.PI * 2);
         ctx.fill();
 
- 
         ctx.strokeStyle = "rgba(255,255,255,0.7)";
         ctx.lineWidth = 1.5;
         ctx.stroke();
@@ -182,9 +183,9 @@ function draw() {
   }
 }
 
-
-
 rollBtn.onclick = () => {
+  if (gameOver) return;
+
   if (!diceRoll) {
     rollDice();
     updateUI();
@@ -192,11 +193,11 @@ rollBtn.onclick = () => {
 };
 
 canvas.onclick = (e) => {
+  if (gameOver) return;
   const rect = canvas.getBoundingClientRect();
   const col = Math.floor((e.clientX - rect.left) / CELL);
   const row = Math.floor((e.clientY - rect.top) / CELL);
 
- 
   if (board[row][col] === currentPlayer && !selectedPawn) {
     selectedPawn = { row, col };
     validMoves = getValidMoves(row, col);
@@ -209,12 +210,10 @@ canvas.onclick = (e) => {
     if (isValidMove) {
       const targetPawn = board[row][col];
 
-      // Cut opponent if present
       if (targetPawn && targetPawn !== currentPlayer) {
         returnPawnHome(targetPawn);
       }
 
-      // Move pawn
       board[row][col] = currentPlayer;
       board[selectedPawn.row][selectedPawn.col] = null;
 
@@ -222,18 +221,33 @@ canvas.onclick = (e) => {
       validMoves = [];
       diceRoll = null;
 
-      // Switch turn
+      if (checkWin(currentPlayer)) {
+        gameOver = true;
+        turnDisplay.textContent = currentPlayer === "C" ? "CREATOR WINS!" : "DESTROYER WINS!";
+        alert(currentPlayer === "C" ? "🎉 Creator has completed the pattern!" : "🔥 Destroyer has completed the pattern!");
+        diceDisplay.textContent = "✓";
+        rollBtn.disabled = true;
+        draw();
+        return;
+      }
+
       currentPlayer = currentPlayer === "C" ? "D" : "C";
       updateUI();
       draw();
+    } else {
+
+      selectedPawn = null;
+      validMoves = [];
+      draw();
     }
   }
+};
+
+function init() {
+  loadPattern();
+  resetBoard();
+  updateUI();
+  draw();
 }
 
-
-loadPattern();
-resetBoard();
-updateUI();
-draw();
-
-setInterval(draw, 60);
+init();
