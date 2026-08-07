@@ -54,5 +54,5 @@ startBtn.addEventListener("click", () => {
   };
 
   localStorage.setItem("CREATOR_GAME_CONFIG", JSON.stringify(config));
-  window.location.href = "game screen/game.html";
+  window.location.href = "game%20screen/game.html";
 });
