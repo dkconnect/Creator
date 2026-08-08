@@ -13,7 +13,7 @@ class Renderer:
     def draw(self):
         self.screen.fill((30, 30, 30))
 
-        # drawing board
+        # Draw board
         for row in range(self.game.board.size):
             for col in range(self.game.board.size):
                 x = self.BOARD_X + col * self.CELL_SIZE
@@ -33,7 +33,7 @@ class Renderer:
                     1
                 )
 
-        # drwing pawns
+        # Draw pawns
         for row in range(self.game.board.size):
             for col in range(self.game.board.size):
 
@@ -56,3 +56,14 @@ class Renderer:
                     (x, y),
                     self.CELL_SIZE // 2 - 4
                 )
+
+                if pawn == self.game.selected_pawn:
+                    pygame.draw.circle(
+                        self.screen,
+                        (255, 255, 0),
+                        (x, y),
+                        self.CELL_SIZE // 2 - 2,
+                        3
+                    )
+        
+        
