@@ -23,9 +23,17 @@ while running:
 
         if event.type == pygame.MOUSEBUTTONDOWN:
             cell = input_manager.get_clicked_cell(event.pos)
-
+            
             if cell is not None:
-                print(cell)
+                row, col = cell
+                
+                if game.select_pawn(row, col):
+                    print(f"Selected: ({row}, {col})")
+        
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                value = game.roll_dice()
+                print(f"Dice: {value}")
 
     renderer.draw()
 
