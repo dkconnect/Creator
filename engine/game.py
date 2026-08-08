@@ -1,6 +1,7 @@
 from engine.board import Board
 from engine.pawn import Pawn
 from engine.player import Player
+from engine.dice import Dice
 
 
 class Game:
@@ -9,8 +10,10 @@ class Game:
 
         self.blue = Player(team="BLUE")
         self.red = Player(team="RED")
+        self.dice = Dice()
 
         self.current_player = self.blue
+        self.selected_pawn = None
 
         self.create_pawns()
 
@@ -46,3 +49,23 @@ class Game:
                 self.board.place_pawn(pawn)
 
                 pawn_id += 1
+    
+    def select_pawn(self, row, col):
+        if self.dice.value is None:
+            return False
+
+        pawn = self.board.get_pawn(row, col)
+
+        if pawn is None:
+            self.selected_pawn = None
+            return False
+
+        if pawn.team != self.current_player.team:
+            self.selected_pawn = None
+            return False
+
+        self.selected_pawn = pawn
+        return True
+
+    def roll_dice(self):
+        return self.dice.roll()
