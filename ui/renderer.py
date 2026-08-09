@@ -32,6 +32,25 @@ class Renderer:
                     rect,
                     1
                 )
+                
+        # Draw valid moves
+        for row, col in self.game.get_valid_moves():
+            x = self.BOARD_X + col * self.CELL_SIZE
+            y = self.BOARD_Y + row * self.CELL_SIZE
+
+            rect = pygame.Rect(
+                x,
+                y,
+                self.CELL_SIZE,
+                self.CELL_SIZE
+            )
+
+            pygame.draw.rect(
+                self.screen,
+                (0, 200, 0),
+                rect,
+                3
+            )
 
         # Draw pawns
         for row in range(self.game.board.size):
