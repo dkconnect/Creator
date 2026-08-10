@@ -84,5 +84,3 @@ class Renderer:
                         self.CELL_SIZE // 2 - 2,
                         3
                     )
-        
-        
