@@ -35,7 +35,6 @@ class Game:
 
                 pawn_id += 1
 
-        # Red pawns
         for row in range(self.board.size - 2, self.board.size):
             for col in range(self.board.size):
                 pawn = Pawn(
@@ -111,6 +110,7 @@ class Game:
             row = pawn.row + dr * distance
             col = pawn.col + dc * distance
 
+            # Outside board
             if not (0 <= row < self.board.size and 0 <= col < self.board.size):
                 continue
 
@@ -132,23 +132,29 @@ class Game:
 
         pawn = self.selected_pawn
 
-        target = self.board.get_pawn(row, col)
-
-        if target is not None:
-            self.respawn_pawn(target)
+        captured_pawn = self.board.get_pawn(row, col)
 
         self.board.grid[pawn.row][pawn.col] = None
 
         pawn.row = row
         pawn.col = col
-
         self.board.grid[row][col] = pawn
 
-        self.selected_pawn = None
+        if captured_pawn is not None:
+            self.respawn_pawn(captured_pawn)
 
+
+        self.selected_pawn = None
         self.dice.value = None
+        self.switch_turn()
 
         return True
+
+    def switch_turn(self):
+        if self.current_player == self.blue:
+            self.current_player = self.red
+        else:
+            self.current_player = self.blue
 
     def roll_dice(self):
         return self.dice.roll()
