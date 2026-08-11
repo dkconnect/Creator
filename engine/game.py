@@ -2,6 +2,9 @@ from engine.board import Board
 from engine.pawn import Pawn
 from engine.player import Player
 from engine.dice import Dice
+from engine.movement import Movement
+from engine.capture import Capture
+from engine.pattern import Pattern
 
 
 class Game:
@@ -12,15 +15,18 @@ class Game:
         self.red = Player(team="RED")
         self.dice = Dice()
 
+        self.pattern = Pattern()
+        self.pattern.load_random()
+
         self.current_player = self.blue
         self.selected_pawn = None
 
         self.create_pawns()
+        print(self.pattern.name)
 
     def create_pawns(self):
         pawn_id = 0
-
-        # Blue pawns
+        
         for row in range(2):
             for col in range(self.board.size):
                 pawn = Pawn(
@@ -48,6 +54,7 @@ class Game:
                 self.board.place_pawn(pawn)
 
                 pawn_id += 1
+
     def respawn_pawn(self, pawn):
         player = self.blue if pawn.team == "BLUE" else self.red
 
@@ -80,48 +87,13 @@ class Game:
             return False
 
         if pawn.team != self.current_player.team:
-            self.selected_pawn = None
             return False
 
         self.selected_pawn = pawn
         return True
     
     def get_valid_moves(self):
-        if self.selected_pawn is None:
-            return []
-
-        moves = []
-
-        directions = [
-            (-1, 0),   # Up
-            (1, 0),    # Down
-            (0, -1),   # Left
-            (0, 1),    # Right
-            (-1, -1),  # Up Left
-            (-1, 1),   # Up Right
-            (1, -1),   # Down Left
-            (1, 1)     # Down Right
-        ]
-
-        distance = self.dice.value
-        pawn = self.selected_pawn
-
-        for dr, dc in directions:
-            row = pawn.row + dr * distance
-            col = pawn.col + dc * distance
-
-            # Outside board
-            if not (0 <= row < self.board.size and 0 <= col < self.board.size):
-                continue
-
-            target = self.board.get_pawn(row, col)
-
-            if target is not None and target.team == pawn.team:
-                continue
-
-            moves.append((row, col))
-
-        return moves
+        return Movement.get_valid_moves(self)
 
     def move_selected_pawn(self, row, col):
         if self.selected_pawn is None:
@@ -139,16 +111,23 @@ class Game:
         pawn.row = row
         pawn.col = col
         self.board.grid[row][col] = pawn
-
-        if captured_pawn is not None:
-            self.respawn_pawn(captured_pawn)
-
+        
+        Capture.handle_capture(self, captured_pawn)
 
         self.selected_pawn = None
+
         self.dice.value = None
+
         self.switch_turn()
 
         return True
+    
+    def handle_click(self, row, col):
+        if self.selected_pawn is not None:
+            if self.move_selected_pawn(row, col):
+                return
+
+        self.select_pawn(row, col)
 
     def switch_turn(self):
         if self.current_player == self.blue:
