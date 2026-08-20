@@ -27,6 +27,7 @@ while running:
             if cell is not None:
                 row, col = cell
 
+                # If a pawn is already selected we move it
                 if game.selected_pawn is not None:
                     if game.move_selected_pawn(row, col):
                         print(f"Moved to ({row}, {col})")
