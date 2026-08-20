@@ -14,6 +14,7 @@ class Renderer:
     def draw(self):
         self.screen.fill((30, 30, 30))
 
+        # Draw board
         for row in range(self.game.board.size):
             for col in range(self.game.board.size):
                 x = self.BOARD_X + col * self.CELL_SIZE
@@ -33,9 +34,17 @@ class Renderer:
                     1
                 )
 
+        # Draw pattern
         pattern = self.game.pattern
 
         offset = (self.game.board.size - pattern.size) // 2
+
+        pattern_surface = pygame.Surface(
+            (self.CELL_SIZE, self.CELL_SIZE),
+            pygame.SRCALPHA
+        )
+
+        pattern_surface.fill((255, 255, 255, 40))   
 
         for row in range(pattern.size):
             for col in range(pattern.size):
@@ -46,19 +55,9 @@ class Renderer:
                 x = self.BOARD_X + (col + offset) * self.CELL_SIZE
                 y = self.BOARD_Y + (row + offset) * self.CELL_SIZE
 
-                rect = pygame.Rect(
-                    x,
-                    y,
-                    self.CELL_SIZE,
-                    self.CELL_SIZE
-                )
-
-                pygame.draw.rect(
-                    self.screen,
-                    (90, 90, 90),
-                    rect
-                )
-
+                self.screen.blit(pattern_surface, (x, y))
+                
+        # Draw valid moves
         for row, col in self.game.get_valid_moves():
             x = self.BOARD_X + col * self.CELL_SIZE
             y = self.BOARD_Y + row * self.CELL_SIZE
@@ -77,6 +76,7 @@ class Renderer:
                 3
             )
 
+        # Draw pawns
         for row in range(self.game.board.size):
             for col in range(self.game.board.size):
 
@@ -109,6 +109,7 @@ class Renderer:
                         3
                     )
 
+        # Current Turn
         turn_text = self.font.render(
             f"Turn : {self.game.current_player.team}",
             True,
@@ -117,6 +118,8 @@ class Renderer:
 
         self.screen.blit(turn_text, (860, 60))
 
+
+        # Dice
         dice_value = self.game.dice.value
 
         if dice_value is None:
@@ -132,6 +135,8 @@ class Renderer:
 
         self.screen.blit(dice_text, (860, 110))
 
+
+        # Pattern
         pattern_text = self.font.render(
             f"Pattern : {self.game.pattern.name}",
             True,
@@ -139,5 +144,23 @@ class Renderer:
         )
 
         self.screen.blit(pattern_text, (860, 160))
+
+        # Victory 
+        if self.game.game_over:
+            overlay = pygame.Surface(self.screen.get_size(), pygame.SRCALPHA)
+            overlay.fill((0, 0, 0, 170))
+            self.screen.blit(overlay, (0, 0))
+
+            winner_text = self.font.render(
+                f"{self.game.winner.team} WINS!",
+                True,
+                (255, 255, 255)
+            )
+
+            text_rect = winner_text.get_rect(
+                center=self.screen.get_rect().center
+            )
+
+            self.screen.blit(winner_text, text_rect)
         
         
