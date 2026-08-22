@@ -24,10 +24,14 @@ while running:
         if event.type == pygame.MOUSEBUTTONDOWN:
             cell = input_manager.get_clicked_cell(event.pos)
 
+            if renderer.dice_button.collidepoint(event.pos):
+                game.roll_dice()
+                continue
+
             if cell is not None:
                 row, col = cell
 
-                # If a pawn is already selected we move it
+                # If a pawn is already selected, try moving it
                 if game.selected_pawn is not None:
                     if game.move_selected_pawn(row, col):
                         print(f"Moved to ({row}, {col})")
@@ -39,6 +43,7 @@ while running:
             if event.key == pygame.K_SPACE:
                 value = game.roll_dice()
                 print(f"Dice: {value}")
+
 
     renderer.draw()
 
