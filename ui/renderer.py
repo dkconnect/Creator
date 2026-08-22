@@ -1,5 +1,6 @@
 import pygame
 
+
 class Renderer:
     CELL_SIZE = 48
     BOARD_X = 40
@@ -46,21 +47,16 @@ class Renderer:
 
         pattern_surface.fill((255, 255, 255, 40))
 
-        cell_index = 0
-
         for row in range(pattern.size):
             for col in range(pattern.size):
 
-                if cell_index >= self.game.preview_revealed_cells:
-                    break
+                if pattern.grid[row][col] != 1:
+                    continue
 
-                if pattern.grid[row][col] == 1:
-                    x = self.BOARD_X + (col + offset) * self.CELL_SIZE
-                    y = self.BOARD_Y + (row + offset) * self.CELL_SIZE
+                x = self.BOARD_X + (col + offset) * self.CELL_SIZE
+                y = self.BOARD_Y + (row + offset) * self.CELL_SIZE
 
-                    self.screen.blit(pattern_surface, (x, y))
-
-                cell_index += 1
+                self.screen.blit(pattern_surface, (x, y))
         
         # Pawn losses
         blue_losses_text = self.font.render(
