@@ -1,7 +1,7 @@
 def check_victory(game, player):
     pattern = game.pattern
 
-    offset = (game.board.size - pattern.size) 
+    offset = (game.board.size - pattern.size) // 2
 
     for row in range(pattern.size):
         for col in range(pattern.size):
