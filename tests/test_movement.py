@@ -149,6 +149,10 @@ def test_enemy_pawn_destination_is_legal():
 def test_move_outside_board_is_illegal():
     game, pawn = setup_game_with_pawn(1, 14, 3)
 
+    # Clear the friendly pawn sitting at (1, 11) — it's part of the
+    # initial setup and would otherwise block that destination.
+    game.board.grid[1][11] = None
+
     moves = Movement.get_valid_moves(game)
 
     # Up is outside the board.
