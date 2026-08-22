@@ -8,3 +8,4 @@ class Player:
     pawns: list[Pawn] = field(default_factory=list)
     captures_suffered: int = 0
     respawns: int = 0
+    reserve: list[Pawn] = field(default_factory=list)
