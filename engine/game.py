@@ -1,3 +1,4 @@
+import pygame
 from engine.board import Board
 from engine.pawn import Pawn
 from engine.player import Player
@@ -16,18 +17,40 @@ class Game:
         self.dice = Dice()
         self.pattern = Pattern()
         self.pattern.load_random()
+        self.preview_active = True
+        self.preview_start_time = pygame.time.get_ticks()
+        self.preview_revealed_cells = 0
         self.current_player = self.blue
         self.selected_pawn = None
         self.game_over = False
         self.winner = None
+        self.preview_fade_start = 2500
+        self.preview_duration = 3000
 
         self.create_pawns()
         print(self.pattern.name)
+    
+    def update_preview(self):
+        if not self.preview_active:
+            return
 
+        elapsed = pygame.time.get_ticks() - self.preview_start_time
+
+        total_cells = self.pattern.size * self.pattern.size
+
+        if elapsed < self.preview_fade_start:
+            self.preview_revealed_cells = min(
+                int((elapsed / self.preview_fade_start) * total_cells),
+                total_cells
+            )
+
+        if elapsed >= self.preview_duration:
+            self.preview_active = False
+            
     def create_pawns(self):
         pawn_id = 0
 
-        # Blue Pawns Creation
+        # Blue pawns
         for row in range(2):
             for col in range(self.board.size):
                 pawn = Pawn(
@@ -42,7 +65,7 @@ class Game:
 
                 pawn_id += 1
 
-        # Red Pawns Creatin
+        # Red pawns
         for row in range(self.board.size - 2, self.board.size):
             for col in range(self.board.size):
                 pawn = Pawn(
@@ -62,7 +85,7 @@ class Game:
 
         player.respawns += 1
 
-        # From the 11th loss onward, the pawn will be permanently removed.
+        # From the 11th loss onward, the pawn is permanently removed.
         if player.respawns > 10:
             pawn.active = False
             return False
@@ -84,20 +107,27 @@ class Game:
         return False
     
     def select_pawn(self, row, col):
+        if self.preview_active:
+            return False
         if self.game_over:
             return False
         if self.dice.value is None:
             return False
 
         pawn = self.board.get_pawn(row, col)
-        
+
+        # Clicked empty square
         if pawn is None:
             self.selected_pawn = None
             return False
+        if not pawn.active:
+            return False
 
+        # Clicked opponent pawn
         if pawn.team != self.current_player.team:
             return False
 
+        # Clicked one of your own pawns
         self.selected_pawn = pawn
         return True
     
@@ -105,6 +135,8 @@ class Game:
         return Movement.get_valid_moves(self)
 
     def move_selected_pawn(self, row, col):
+        if self.preview_active:
+            return False
         if self.game_over:
             return False
         if self.selected_pawn is None:
@@ -117,13 +149,15 @@ class Game:
 
         captured_pawn = self.board.get_pawn(row, col)
 
+        # Remove moving pawn from its old position
         self.board.grid[pawn.row][pawn.col] = None
 
         # Move the pawn
         pawn.row = row
         pawn.col = col
         self.board.grid[row][col] = pawn
-        
+
+        # Respawn captured pawn after the move
         Capture.handle_capture(self, captured_pawn)
 
         if victory.check_victory(self, self.current_player):
@@ -131,8 +165,10 @@ class Game:
             self.winner = self.current_player
             return True
 
+        # Clear selection
         self.selected_pawn = None
 
+        # Reset dice
         self.dice.value = None
 
         self.switch_turn()
@@ -153,6 +189,8 @@ class Game:
             self.current_player = self.blue
 
     def roll_dice(self):
+        if self.preview_active:
+            return None
         if self.game_over:
             return None
         if self.dice.value is not None:
