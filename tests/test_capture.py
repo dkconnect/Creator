@@ -148,7 +148,10 @@ def test_eleventh_capture_can_be_any_pawn():
 
     assert result is False
     assert eleventh.active is False
-    assert game.red.respawns == 11
+
+    # The 11th capture is a permanent removal, not a respawn, so the
+    # respawn count stays at 10 ("Only successful respawns count").
+    assert game.red.respawns == 10
 
 
 def test_active_pawn_can_be_captured_and_respawned_again():
