@@ -9,9 +9,12 @@ def test_captured_pawn_enters_reserve_when_spawn_is_full():
     # Remove the pawn from its current position.
     game.board.grid[captured.row][captured.col] = None
 
-    # Make every Red spawn cell occupied.
-    # The existing Red pawns already occupy all 32 spawn cells,
-    # so the captured pawn has nowhere to respawn.
+    # Make every Red spawn cell occupied, including the square the
+    # captured pawn just vacated (otherwise that square itself counts
+    # as "an empty cell in its home spawn region" and it respawns there).
+    blocker = game.blue.pawns[0]
+    game.board.grid[captured.row][captured.col] = blocker
+
     result = game.respawn_pawn(captured)
 
     assert result is False
@@ -27,6 +30,11 @@ def test_reserved_pawn_spawns_when_space_becomes_available():
     captured = game.red.pawns[0]
 
     game.board.grid[captured.row][captured.col] = None
+
+    # Block the captured pawn's own vacated square so the spawn is
+    # genuinely full and it's forced into the reserve.
+    blocker = game.blue.pawns[0]
+    game.board.grid[captured.row][captured.col] = blocker
 
     game.respawn_pawn(captured)
 
@@ -80,10 +88,16 @@ def test_reserve_processes_oldest_pawn_first():
     first = game.red.pawns[0]
     second = game.red.pawns[1]
 
+    # Block both vacated squares so both captures are forced into reserve.
+    blocker_a = game.blue.pawns[0]
+    blocker_b = game.blue.pawns[1]
+
     game.board.grid[first.row][first.col] = None
+    game.board.grid[first.row][first.col] = blocker_a
     game.respawn_pawn(first)
 
     game.board.grid[second.row][second.col] = None
+    game.board.grid[second.row][second.col] = blocker_b
     game.respawn_pawn(second)
 
     assert game.red.reserve[0] == first
@@ -107,6 +121,11 @@ def test_reserved_pawn_counts_as_capture():
     captured = game.red.pawns[0]
 
     game.board.grid[captured.row][captured.col] = None
+
+    # Block the vacated square so this capture is genuinely forced
+    # into the reserve rather than respawning in place.
+    blocker = game.blue.pawns[0]
+    game.board.grid[captured.row][captured.col] = blocker
 
     game.respawn_pawn(captured)
 
