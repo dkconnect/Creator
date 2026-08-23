@@ -10,12 +10,14 @@ class Pattern:
         self.grid = []
 
     def load_random(self):
-        pattern_folder = Path("patterns")
+
+        base_dir = Path(__file__).resolve().parent.parent
+        pattern_folder = base_dir / "patterns"
 
         files = list(pattern_folder.glob("*.json"))
 
         if not files:
-            raise Exception("No pattern files found.")
+            raise FileNotFoundError(f"No pattern files found in {pattern_folder}.")
 
         file = random.choice(files)
 
