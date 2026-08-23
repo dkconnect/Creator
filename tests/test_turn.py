@@ -192,3 +192,32 @@ def test_handle_click_selects_then_moves():
 
     assert game.selected_pawn is None
     assert game.turn_phase == Game.WAITING_FOR_ROLL
+
+def test_select_pawn_rejects_pawn_with_no_legal_move():
+    game = Game()
+
+    game.dice.value = 3
+    game.turn_phase = Game.WAITING_FOR_SELECTION
+
+    pawn = game.blue.pawns[0]
+
+    # Put the pawn in a corner where the chosen distance
+    # produces no legal destination.
+    game.board.grid[pawn.row][pawn.col] = None
+    pawn.row = 0
+    pawn.col = 0
+    game.board.place_pawn(pawn)
+
+    # Block all possible destinations for this pawn.
+    for row, col in [(3, 0), (0, 3), (3, 3)]:
+        blocker = game.red.pawns[1]
+        game.board.grid[blocker.row][blocker.col] = None
+        blocker.row = row
+        blocker.col = col
+        game.board.place_pawn(blocker)
+
+    result = game.select_pawn(0, 0)
+
+    assert result is False
+    assert game.selected_pawn is None
+    assert game.turn_phase == Game.WAITING_FOR_SELECTION
