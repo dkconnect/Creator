@@ -41,9 +41,18 @@ def test_step_ai_executes_complete_turn():
     performed = game.step_ai()
 
     assert performed is True
-    assert game.current_player == game.blue
-    assert game.turn_phase == Game.WAITING_FOR_ROLL
-    assert game.dice.value is None
+
+    if game.game_over:
+        # A winning AI move ends the game immediately.
+        assert game.winner == game.red
+        assert game.current_player == game.red
+        assert game.turn_phase is None
+    else:
+        # A normal AI move finishes RED's turn
+        # and passes control back to BLUE.
+        assert game.current_player == game.blue
+        assert game.turn_phase == Game.WAITING_FOR_ROLL
+        assert game.dice.value is None
 
 def test_learning_ai_records_human_moves_via_game_loop():
     ai = LearningAI(team="RED")

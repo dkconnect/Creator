@@ -11,6 +11,8 @@ class Renderer:
         self.game = game
         self.font = pygame.font.SysFont("arial", 28)
         self.dice_button = pygame.Rect(860, 310, 220, 60)
+        self.rematch_button = pygame.Rect(390, 500, 200, 60)
+        self.menu_button = pygame.Rect(610, 500, 200, 60)
 
     def draw(self):
         self.screen.fill((30, 30, 30))
@@ -185,8 +187,11 @@ class Renderer:
 
         # Victory overlay
         if self.game.game_over:
-            overlay = pygame.Surface(self.screen.get_size(), pygame.SRCALPHA)
-            overlay.fill((0, 0, 0, 170))
+            overlay = pygame.Surface(
+                self.screen.get_size(),
+                pygame.SRCALPHA
+            )
+            overlay.fill((0, 0, 0, 190))
             self.screen.blit(overlay, (0, 0))
 
             winner_text = self.font.render(
@@ -195,8 +200,46 @@ class Renderer:
                 (255, 255, 255)
             )
 
-            text_rect = winner_text.get_rect(
-                center=self.screen.get_rect().center
+            winner_rect = winner_text.get_rect(
+                center=(self.screen.get_width() // 2, 420)
             )
 
-            self.screen.blit(winner_text, text_rect)
+            self.screen.blit(winner_text, winner_rect)
+
+            # Rematch button
+            pygame.draw.rect(
+                self.screen,
+                (50, 120, 220),
+                self.rematch_button,
+                border_radius=8
+            )
+
+            rematch_text = self.font.render(
+                "REMATCH",
+                True,
+                (255, 255, 255)
+            )
+
+            self.screen.blit(
+                rematch_text,
+                rematch_text.get_rect(center=self.rematch_button.center)
+            )
+
+            # Main menu button
+            pygame.draw.rect(
+                self.screen,
+                (70, 70, 70),
+                self.menu_button,
+                border_radius=8
+            )
+
+            menu_text = self.font.render(
+                "MAIN MENU",
+                True,
+                (255, 255, 255)
+            )
+
+            self.screen.blit(
+                menu_text,
+                menu_text.get_rect(center=self.menu_button.center)
+            )

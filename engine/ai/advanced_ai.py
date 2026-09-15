@@ -138,7 +138,20 @@ class AdvancedAI(BaseAI):
                 # 1. Immediate victory check
                 old_r, old_c, cap = self._simulate_move(game, pawn, target_row, target_col)
                 if victory.check_victory(game, ai_player):
-                    self._undo_move(game, pawn, old_r, old_c, target_row, target_col, cap)
+                    self._undo_move(
+                        game,
+                        pawn,
+                        old_r,
+                        old_c,
+                        target_row,
+                        target_col,
+                        cap
+                    )
+
+                    # Human-response simulation may have changed the dice value
+                    # during evaluation of an earlier candidate move.
+                    game.dice.value = current_dice
+
                     return (pawn, target_row, target_col)
 
                 # 2. Expectiminimax evaluation over human response
