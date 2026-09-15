@@ -29,13 +29,21 @@ def test_step_ai_executes_complete_turn():
     assert game.current_player == game.red
     assert game.turn_phase == Game.WAITING_FOR_ROLL
 
-    # Execute step_ai
+    # Stage 1: AI rolls the dice
     performed = game.step_ai()
 
-    # Verify that either a move was made or turn was auto-skipped if no moves
+    assert performed is False
+    assert game.current_player == game.red
+    assert game.turn_phase == Game.WAITING_FOR_SELECTION
+    assert game.dice.value is not None
+
+    # Stage 2: AI selects a pawn and moves
+    performed = game.step_ai()
+
+    assert performed is True
     assert game.current_player == game.blue
     assert game.turn_phase == Game.WAITING_FOR_ROLL
-
+    assert game.dice.value is None
 
 def test_learning_ai_records_human_moves_via_game_loop():
     ai = LearningAI(team="RED")
