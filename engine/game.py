@@ -241,8 +241,9 @@ class Game:
 
     def step_ai(self) -> bool:
         """
-        Executes one AI turn step (rolls dice -> selects -> moves).
-        Returns True if a move was made, False otherwise.
+        Advances the AI turn by one visible stage so the player can see
+        the dice roll before the piece moves.
+        Returns True if a full move was completed, False otherwise.
         """
         if self.game_over or self.ai_controller is None:
             return False
@@ -250,11 +251,12 @@ class Game:
         if self.current_player.team != self.ai_controller.team:
             return False
 
+        # Stage 1: Roll the dice (player sees the number)
         if self.turn_phase == self.WAITING_FOR_ROLL:
-            val = self.roll_dice()
-            if self.turn_phase != self.WAITING_FOR_SELECTION:
-                return False  # Auto-skipped
+            self.roll_dice()
+            return False  # stop here so the dice value is visible
 
+        # Stage 2: Select and move
         if self.turn_phase == self.WAITING_FOR_SELECTION:
             action = self.ai_controller.select_move(self)
             if action is None:

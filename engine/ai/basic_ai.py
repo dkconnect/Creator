@@ -28,27 +28,49 @@ class BasicAI(BaseAI):
     ) -> float:
         score = 0.0
 
+        currently_on_pattern = (pawn.row, pawn.col) in target_cells
+        landing_on_pattern = (target_row, target_col) in target_cells
+
         # High priority: Land directly on a required pattern square
-        if (target_row, target_col) in target_cells:
+        if landing_on_pattern:
             score += 100.0
 
         # Medium priority: Capture opponent piece
         target_pawn = game.board.get_pawn(target_row, target_col)
-        if target_pawn is not None and target_pawn.team != self.team:
+        is_capture = target_pawn is not None and target_pawn.team != self.team
+        if is_capture:
             score += 40.0
+            # Extra bonus for capturing an opponent who is sitting on the pattern
+            if (target_row, target_col) in target_cells:
+                score += 30.0
 
-        # Proximity: Move closer to nearest empty/opponent-held pattern cell
+        # Strongly discourage leaving a pattern cell (unless capturing or moving to another pattern cell)
+        if currently_on_pattern and not landing_on_pattern and not is_capture:
+            score -= 80.0
+
+        # Progress + proximity toward nearest unfilled pattern cell
         unfilled_targets = [
             (tr, tc) for tr, tc in target_cells
             if game.board.get_pawn(tr, tc) is None or game.board.get_pawn(tr, tc).team != self.team
         ]
 
         if unfilled_targets:
-            min_dist = min(
-                abs(target_row - tr) + abs(target_col - tc)
-                for tr, tc in unfilled_targets
-            )
-            score -= min_dist * 2.0
+            def manhattan(r1, c1, r2, c2):
+                return abs(r1 - r2) + abs(c1 - c2)
+
+            current_dist = min(manhattan(pawn.row, pawn.col, tr, tc) for tr, tc in unfilled_targets)
+            new_dist = min(manhattan(target_row, target_col, tr, tc) for tr, tc in unfilled_targets)
+
+            # Reward actual progress (getting closer)
+            progress = current_dist - new_dist
+            score += progress * 5.0
+
+            # Still prefer ending closer overall
+            score -= new_dist * 1.5
+
+            # Small bonus for developing far pieces (bring the army in)
+            if current_dist > 6:
+                score += 4.0
 
         score += random.uniform(0.0, 1.0)
         return score
