@@ -35,18 +35,30 @@ class BasicAI(BaseAI):
         if landing_on_pattern:
             score += 100.0
 
-        # Medium priority: Capture opponent piece
+        # Capture opponent piece
         target_pawn = game.board.get_pawn(target_row, target_col)
         is_capture = target_pawn is not None and target_pawn.team != self.team
         if is_capture:
-            score += 40.0
-            # Extra bonus for capturing an opponent who is sitting on the pattern
+            score += 45.0
+            # Strong disruption bonus: kick opponent off a pattern cell
             if (target_row, target_col) in target_cells:
-                score += 30.0
+                score += 55.0
 
         # Strongly discourage leaving a pattern cell (unless capturing or moving to another pattern cell)
         if currently_on_pattern and not landing_on_pattern and not is_capture:
             score -= 80.0
+
+        # Encourage pieces to leave the starting home rows
+        if self.team == "RED":
+            home_rows = (14, 15)
+        else:
+            home_rows = (0, 1)
+
+        currently_in_home = pawn.row in home_rows
+        landing_in_home = target_row in home_rows
+
+        if currently_in_home and not landing_in_home:
+            score += 12.0
 
         # Progress + proximity toward nearest unfilled pattern cell
         unfilled_targets = [

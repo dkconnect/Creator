@@ -27,7 +27,7 @@ clock = pygame.time.Clock()
 running = True
 
 # AI turn pacing timer
-ai_turn_delay_ms = 3000
+ai_turn_delay_ms = 1500
 last_ai_step_time = 0
 
 
