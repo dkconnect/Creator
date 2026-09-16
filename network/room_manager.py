@@ -72,6 +72,28 @@ class RoomManager:
         return self.rooms.get(
             room_code.upper()
         )
+        
+    def handle_client_message(
+        self,
+        room_code,
+        client_id,
+        message
+    ):
+        """
+        Route a client message to the correct room session.
+        """
+
+        session = self.get_room(
+            room_code
+        )
+
+        if session is None:
+            return None
+
+        return session.handle_client_message(
+            client_id,
+            message
+        )
 
     def remove_client(self, room_code, client_id):
         session = self.get_room(

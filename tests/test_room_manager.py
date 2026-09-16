@@ -158,3 +158,187 @@ def test_different_rooms_have_different_codes():
     )
 
     assert first_code != second_code
+
+def test_creator_rejoining_keeps_blue_team():
+    manager = RoomManager()
+
+    room_code, team = manager.create_room(
+        "client-a"
+    )
+
+    assert team == "BLUE"
+
+    rejoined_team = manager.join_room(
+        room_code,
+        "client-a"
+    )
+
+    assert rejoined_team == "BLUE"
+
+    session = manager.get_room(
+        room_code
+    )
+
+    assert session.blue_client == "client-a"
+    assert session.red_client is None
+
+
+def test_red_client_rejoining_keeps_red_team():
+    manager = RoomManager()
+
+    room_code, _ = manager.create_room(
+        "client-a"
+    )
+
+    manager.join_room(
+        room_code,
+        "client-b"
+    )
+
+    rejoined_team = manager.join_room(
+        room_code,
+        "client-b"
+    )
+
+    assert rejoined_team == "RED"
+
+    session = manager.get_room(
+        room_code
+    )
+
+    assert session.blue_client == "client-a"
+    assert session.red_client == "client-b"
+
+
+def test_duplicate_creator_join_does_not_fill_room():
+    manager = RoomManager()
+
+    room_code, _ = manager.create_room(
+        "client-a"
+    )
+
+    manager.join_room(
+        room_code,
+        "client-a"
+    )
+
+    session = manager.get_room(
+        room_code
+    )
+
+    assert not session.is_full()
+
+
+def test_unique_second_client_can_join_after_creator_rejoins():
+    manager = RoomManager()
+
+    room_code, _ = manager.create_room(
+        "client-a"
+    )
+
+    manager.join_room(
+        room_code,
+        "client-a"
+    )
+
+    team = manager.join_room(
+        room_code,
+        "client-b"
+    )
+
+    assert team == "RED"
+
+    session = manager.get_room(
+        room_code
+    )
+
+    assert session.is_full()
+
+def test_room_manager_routes_blue_roll():
+    from engine.protocol import Protocol
+
+    manager = RoomManager()
+
+    room_code, _ = manager.create_room(
+        "client-a"
+    )
+
+    manager.join_room(
+        room_code,
+        "client-b"
+    )
+
+    response = manager.handle_client_message(
+        room_code,
+        "client-a",
+        Protocol.roll()
+    )
+
+    assert response["type"] == Protocol.GAME_STATE
+
+    session = manager.get_room(
+        room_code
+    )
+
+    assert session.game.dice.value is not None
+
+
+def test_room_manager_blocks_red_roll_on_blue_turn():
+    from engine.protocol import Protocol
+
+    manager = RoomManager()
+
+    room_code, _ = manager.create_room(
+        "client-a"
+    )
+
+    manager.join_room(
+        room_code,
+        "client-b"
+    )
+
+    response = manager.handle_client_message(
+        room_code,
+        "client-b",
+        Protocol.roll()
+    )
+
+    assert response["type"] == Protocol.ERROR
+    assert response["data"]["message"] == (
+        "Not your turn"
+    )
+
+
+def test_room_manager_blocks_unknown_client():
+    from engine.protocol import Protocol
+
+    manager = RoomManager()
+
+    room_code, _ = manager.create_room(
+        "client-a"
+    )
+
+    response = manager.handle_client_message(
+        room_code,
+        "intruder",
+        Protocol.roll()
+    )
+
+    assert response["type"] == Protocol.ERROR
+    assert response["data"]["message"] == (
+        "Invalid client team"
+    )
+
+
+def test_room_manager_unknown_room_returns_none():
+    from engine.protocol import Protocol
+
+    manager = RoomManager()
+
+    response = manager.handle_client_message(
+        "ABC123",
+        "client-a",
+        Protocol.roll()
+    )
+
+    assert response is None
