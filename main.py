@@ -27,6 +27,7 @@ menu_renderer = MenuRenderer(screen, menu_state)
 game = None
 renderer = None
 input_manager = None
+multiplayer = None
 
 clock = pygame.time.Clock()
 running = True
@@ -208,11 +209,36 @@ while running:
                             if menu_state.selected_mode == "AI":
                                 start_game()
 
+                            elif (
+                                menu_state.selected_mode == "ROOM"
+                                and menu_state.room_action == "CREATE"
+                            ):
+                                multiplayer = MultiplayerClient()
+
+                                if multiplayer.connect():
+
+                                    response = multiplayer.create_room()
+
+                                    if (
+                                        response is not None
+                                        and response.get("type") == "ROOM_JOINED"
+                                    ):
+                                        menu_state.room_code_input = (
+                                            multiplayer.room_code
+                                        )
+
+                                        menu_state.current_state = (
+                                            MenuState.LOBBY_WAITING
+                                        )
+
+                                    else:
+                                        multiplayer.disconnect()
+                                        multiplayer = None
+
                             else:
                                 menu_state.current_state = (
                                     MenuState.LOBBY_WAITING
                                 )
-
                         elif btn_key == "SUBMIT_JOIN":
 
                             if len(menu_state.room_code_input) == 6:
