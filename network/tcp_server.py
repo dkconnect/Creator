@@ -144,6 +144,10 @@ class TcpGameServer:
             pass
 
         finally:
+            self.router.remove_client(
+                client_id
+            )
+            
             try:
                 client_socket.close()
             except OSError:

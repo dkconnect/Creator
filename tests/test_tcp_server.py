@@ -22,7 +22,9 @@ class FakeRouter:
             "Test response"
         )
 
-
+    def remove_client(self, client_id):
+        pass
+        
 def test_server_defaults():
     server = TcpGameServer()
 
@@ -196,6 +198,47 @@ def test_handle_client_processes_multiple_messages():
             router.calls[1][1]
             == Protocol.create_room()
         )
+
+    finally:
+        client_side.close()
+    
+class CleanupRouter(FakeRouter):
+    def __init__(self):
+        super().__init__()
+        self.removed_clients = []
+
+    def remove_client(self, client_id):
+        self.removed_clients.append(
+            client_id
+        )
+
+
+def test_handle_client_cleans_up_on_disconnect():
+    router = CleanupRouter()
+
+    server = TcpGameServer(
+        router=router
+    )
+
+    server.running = True
+
+    server_side, client_side = (
+        socket.socketpair()
+    )
+
+    try:
+        client_side.shutdown(
+            socket.SHUT_WR
+        )
+
+        server._handle_client(
+            server_side,
+            "client-test"
+        )
+
+        assert router.removed_clients == [
+            "client-test"
+        ]
 
     finally:
         client_side.close()

@@ -218,3 +218,69 @@ def test_red_cannot_roll_on_blue_turn():
     assert response["data"]["message"] == (
         "Not your turn"
     )
+
+def test_remove_blue_client_from_room():
+    router = ConnectionRouter()
+
+    response = router.handle_message(
+        "client-a",
+        Protocol.create_room()
+    )
+
+    room_code = response["data"]["room_code"]
+
+    team = router.remove_client(
+        "client-a"
+    )
+
+    assert team == "BLUE"
+
+    assert "client-a" not in (
+        router.client_rooms
+    )
+
+    session = router.room_manager.get_room(
+        room_code
+    )
+
+    assert session.blue_client is None
+
+
+def test_remove_red_client_from_room():
+    router = ConnectionRouter()
+
+    response = router.handle_message(
+        "client-a",
+        Protocol.create_room()
+    )
+
+    room_code = response["data"]["room_code"]
+
+    router.handle_message(
+        "client-b",
+        Protocol.join_room(room_code)
+    )
+
+    team = router.remove_client(
+        "client-b"
+    )
+
+    assert team == "RED"
+
+    assert "client-b" not in (
+        router.client_rooms
+    )
+
+    session = router.room_manager.get_room(
+        room_code
+    )
+
+    assert session.red_client is None
+
+
+def test_remove_unknown_client_returns_none():
+    router = ConnectionRouter()
+
+    assert router.remove_client(
+        "unknown-client"
+    ) is None

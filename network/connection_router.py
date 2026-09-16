@@ -111,3 +111,24 @@ class ConnectionRouter:
             room_code,
             team
         )
+    
+    def remove_client(self, client_id):
+        """
+        Remove a disconnected client from its current room.
+
+        Returns the team that was removed, or None if the
+        client was not in a room.
+        """
+
+        room_code = self.client_rooms.pop(
+            client_id,
+            None
+        )
+
+        if room_code is None:
+            return None
+
+        return self.room_manager.remove_client(
+            room_code,
+            client_id
+        )
