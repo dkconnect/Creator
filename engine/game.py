@@ -5,6 +5,7 @@ from engine.dice import Dice
 from engine.movement import Movement
 from engine.capture import Capture
 from engine.pattern import Pattern
+from engine.action import GameAction
 from engine.ai.learning_ai import LearningAI
 import engine.victory as victory
 
@@ -197,6 +198,53 @@ class Game:
 
         return actions
 
+    def is_legal_action(self, action):
+        if self.game_over:
+            return False
+
+        if not isinstance(action, GameAction):
+            return False
+
+        if action.action_type != GameAction.MOVE:
+            return False
+
+        if self.turn_phase != self.WAITING_FOR_MOVE:
+            return False
+
+        pawn = next(
+            (
+                pawn
+                for pawn in self.current_player.pawns
+                if pawn.id == action.pawn_id
+            ),
+            None
+        )
+
+        if pawn is None:
+            return False
+
+        if not pawn.active:
+            return False
+
+        if self.selected_pawn is not pawn:
+            return False
+
+        return (action.row, action.col) in (
+            Movement.get_valid_moves_for_pawn(
+                self,
+                pawn
+            )
+        )
+
+    def apply_action(self, action):
+        if not self.is_legal_action(action):
+            return False
+
+        return self.move_selected_pawn(
+            action.row,
+            action.col
+        )
+
     def move_selected_pawn(self, row, col):
         if self.game_over or self.turn_phase != self.WAITING_FOR_MOVE or self.selected_pawn is None:
             return False
@@ -310,5 +358,54 @@ class Game:
             pawn, tr, tc = action
             if self.select_pawn(pawn.row, pawn.col):
                 return self.move_selected_pawn(tr, tc)
+
+        return False
+
+    def submit_move(self, pawn_id, row, col):
+        """
+        Submit a complete move using only serializable values.
+
+        Intended for network/server-controlled moves where there
+        is no mouse-based pawn selection step.
+        """
+
+        if self.game_over:
+            return False
+
+        if self.turn_phase != self.WAITING_FOR_SELECTION:
+            return False
+
+        pawn = next(
+            (
+                pawn
+                for pawn in self.current_player.pawns
+                if pawn.id == pawn_id
+            ),
+            None
+        )
+
+        if pawn is None:
+            return False
+
+        if not pawn.active:
+            return False
+
+        # Select through the normal engine path.
+        if not self.select_pawn(pawn.row, pawn.col):
+            return False
+
+        action = GameAction.move(
+            pawn_id=pawn_id,
+            row=row,
+            col=col
+        )
+
+        if self.apply_action(action):
+            return True
+
+        # Invalid destination must not leave the game
+        # stuck with a selected pawn.
+        self.selected_pawn = None
+        self.turn_phase = self.WAITING_FOR_SELECTION
 
         return False
