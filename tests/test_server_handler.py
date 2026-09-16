@@ -34,7 +34,8 @@ def test_handler_rejects_invalid_protocol_message():
     handler = ServerHandler(game)
 
     response = handler.handle_message(
-        {"bad": "message"}
+        {"bad": "message"},
+        client_team="BLUE"
     )
 
     assert response["type"] == Protocol.ERROR
@@ -50,7 +51,8 @@ def test_handler_rejects_server_only_message():
     message = Protocol.game_state(game)
 
     response = handler.handle_message(
-        message
+        message,
+        client_team="BLUE"
     )
 
     assert response["type"] == Protocol.ERROR
@@ -69,7 +71,8 @@ def test_handler_rejects_move_with_missing_data():
     }
 
     response = handler.handle_message(
-        message
+        message,
+        client_team="BLUE"
     )
 
     assert response["type"] == Protocol.ERROR
@@ -91,7 +94,8 @@ def test_handler_rejects_illegal_move():
     )
 
     response = handler.handle_message(
-        message
+        message,
+        client_team="BLUE"
     )
 
     assert response["type"] == Protocol.ERROR
@@ -113,7 +117,8 @@ def test_handler_executes_legal_move():
     )
 
     response = handler.handle_message(
-        message
+        message,
+        client_team="BLUE"
     )
 
     assert response["type"] == Protocol.GAME_STATE
@@ -136,7 +141,8 @@ def test_handler_returns_updated_game_state():
     )
 
     response = handler.handle_message(
-        message
+        message,
+        client_team="BLUE"
     )
 
     assert response == Protocol.game_state(
@@ -160,7 +166,108 @@ def test_illegal_message_does_not_change_board():
     )
 
     response = handler.handle_message(
+        message,
+        client_team="BLUE"
+    )
+
+    assert response["type"] == Protocol.ERROR
+
+    new_positions = [
+        (p.id, p.row, p.col, p.active)
+        for p in game.blue.pawns + game.red.pawns
+    ]
+
+    assert new_positions == original_positions
+
+
+def test_handler_rejects_missing_client_team():
+    game = prepare_game()
+    handler = ServerHandler(game)
+
+    pawn, row, col = find_legal_move(game)
+
+    message = Protocol.move(
+        pawn.id,
+        row,
+        col
+    )
+
+    response = handler.handle_message(
         message
+    )
+
+    assert response["type"] == Protocol.ERROR
+    assert response["data"]["message"] == (
+        "Invalid client team"
+    )
+
+
+def test_handler_rejects_invalid_client_team():
+    game = prepare_game()
+    handler = ServerHandler(game)
+
+    pawn, row, col = find_legal_move(game)
+
+    message = Protocol.move(
+        pawn.id,
+        row,
+        col
+    )
+
+    response = handler.handle_message(
+        message,
+        client_team="GREEN"
+    )
+
+    assert response["type"] == Protocol.ERROR
+    assert response["data"]["message"] == (
+        "Invalid client team"
+    )
+
+
+def test_red_cannot_move_during_blue_turn():
+    game = prepare_game()
+    handler = ServerHandler(game)
+
+    pawn, row, col = find_legal_move(game)
+
+    message = Protocol.move(
+        pawn.id,
+        row,
+        col
+    )
+
+    response = handler.handle_message(
+        message,
+        client_team="RED"
+    )
+
+    assert response["type"] == Protocol.ERROR
+    assert response["data"]["message"] == (
+        "Not your turn"
+    )
+
+
+def test_wrong_turn_request_does_not_change_board():
+    game = prepare_game()
+    handler = ServerHandler(game)
+
+    pawn, row, col = find_legal_move(game)
+
+    original_positions = [
+        (p.id, p.row, p.col, p.active)
+        for p in game.blue.pawns + game.red.pawns
+    ]
+
+    message = Protocol.move(
+        pawn.id,
+        row,
+        col
+    )
+
+    response = handler.handle_message(
+        message,
+        client_team="RED"
     )
 
     assert response["type"] == Protocol.ERROR

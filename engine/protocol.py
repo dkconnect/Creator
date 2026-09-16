@@ -4,6 +4,7 @@ class Protocol:
     MOVE = "MOVE"
     GAME_STATE = "GAME_STATE"
     ERROR = "ERROR"
+    ROLL = "ROLL"
 
     @classmethod
     def move(cls, pawn_id, row, col):
@@ -45,6 +46,7 @@ class Protocol:
 
         if message.get("type") not in (
             cls.MOVE,
+            cls.ROLL,
             cls.GAME_STATE,
             cls.ERROR,
         ):
@@ -54,3 +56,11 @@ class Protocol:
             return False
 
         return True
+    
+    @classmethod
+    def roll(cls):
+        return {
+            "version": cls.VERSION,
+            "type": cls.ROLL,
+            "data": {},
+        }
