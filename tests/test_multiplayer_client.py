@@ -174,3 +174,63 @@ def test_disconnect_clears_multiplayer_state():
     assert not fake.connected
     assert multiplayer.room_code is None
     assert multiplayer.team is None
+
+def test_roll_updates_authoritative_game_state():
+    from engine.game import Game
+
+    multiplayer, fake = (
+        make_multiplayer_client()
+    )
+
+    game = Game()
+    game.dice.value = 4
+
+    fake.responses.append(
+        Protocol.game_state(
+            game
+        )
+    )
+
+    response = multiplayer.roll()
+
+    assert response["type"] == (
+        Protocol.GAME_STATE
+    )
+
+    assert multiplayer.game_state.dice == 4
+    assert (
+        multiplayer.game_state.current_player
+        == "BLUE"
+    )
+
+
+def test_move_updates_authoritative_game_state():
+    from engine.game import Game
+
+    multiplayer, fake = (
+        make_multiplayer_client()
+    )
+
+    game = Game()
+    game.current_player = game.red
+
+    fake.responses.append(
+        Protocol.game_state(
+            game
+        )
+    )
+
+    response = multiplayer.move(
+        pawn_id=1,
+        row=5,
+        col=5
+    )
+
+    assert response["type"] == (
+        Protocol.GAME_STATE
+    )
+
+    assert (
+        multiplayer.game_state.current_player
+        == "RED"
+    )

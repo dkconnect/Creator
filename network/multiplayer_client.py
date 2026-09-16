@@ -1,5 +1,6 @@
 from engine.protocol import Protocol
 from network.tcp_client import TcpGameClient
+from network.client_game_state import ClientGameState
 
 
 class MultiplayerClient:
@@ -15,6 +16,8 @@ class MultiplayerClient:
 
         self.room_code = None
         self.team = None
+        self.game_state = ClientGameState()
+        
 
     def connect(self):
         return self.client.connect()
@@ -46,17 +49,46 @@ class MultiplayerClient:
         )
 
     def roll(self):
-        return self.client.request(
+        response = self.client.request(
             Protocol.roll()
         )
 
+        self._handle_game_state(
+            response
+        )
+
+        return response
+
     def move(self, pawn_id, row, col):
-        return self.client.request(
+        response = self.client.request(
             Protocol.move(
                 pawn_id=pawn_id,
                 row=row,
                 col=col
             )
+        )
+
+        self._handle_game_state(
+            response
+        )
+
+        return response
+
+    def _handle_game_state(
+        self,
+        response
+    ):
+        if response is None:
+            return False
+
+        if (
+            response.get("type")
+            != Protocol.GAME_STATE
+        ):
+            return False
+
+        return self.game_state.update(
+            response["data"]
         )
 
     def _handle_room_response(

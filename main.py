@@ -239,12 +239,34 @@ while running:
                                 menu_state.current_state = (
                                     MenuState.LOBBY_WAITING
                                 )
-                        elif btn_key == "SUBMIT_JOIN":
 
-                            if len(menu_state.room_code_input) == 6:
-                                menu_state.current_state = (
-                                    MenuState.LOBBY_WAITING
-                                )
+                                elif btn_key == "SUBMIT_JOIN":
+
+                                    if len(menu_state.room_code_input) == 6:
+
+                                        multiplayer = MultiplayerClient()
+
+                                        if multiplayer.connect():
+
+                                            response = multiplayer.join_room(
+                                                menu_state.room_code_input
+                                            )
+
+                                            if (
+                                                response is not None
+                                                and response.get("type") == "ROOM_JOINED"
+                                            ):
+                                                menu_state.room_code_input = (
+                                                    multiplayer.room_code
+                                                )
+
+                                                menu_state.current_state = (
+                                                    MenuState.LOBBY_WAITING
+                                                )
+
+                                            else:
+                                                multiplayer.disconnect()
+                                                multiplayer = None
 
                         elif btn_key == "LAUNCH_GAME":
 
