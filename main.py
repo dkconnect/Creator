@@ -2,7 +2,7 @@ import pygame
 import json
 
 from pathlib import Path
-
+from network.multiplayer_client import MultiplayerClient
 from engine.game import Game
 from engine.ai.basic_ai import BasicAI
 from engine.ai.learning_ai import LearningAI
