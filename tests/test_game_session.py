@@ -153,3 +153,58 @@ def test_red_client_cannot_roll_on_blue_turn():
     assert response["data"]["message"] == (
         "Not your turn"
     )
+
+def test_same_client_cannot_take_both_teams():
+    session = GameSession()
+
+    first_team = session.add_client(
+        "client-a"
+    )
+
+    second_team = session.add_client(
+        "client-a"
+    )
+
+    assert first_team == "BLUE"
+    assert second_team == "BLUE"
+
+    assert session.blue_client == "client-a"
+    assert session.red_client is None
+
+
+def test_rejoining_red_client_keeps_red_team():
+    session = GameSession()
+
+    session.add_client("client-a")
+    session.add_client("client-b")
+
+    team = session.add_client(
+        "client-b"
+    )
+
+    assert team == "RED"
+    assert session.blue_client == "client-a"
+    assert session.red_client == "client-b"
+
+
+def test_duplicate_join_does_not_make_session_full():
+    session = GameSession()
+
+    session.add_client("client-a")
+    session.add_client("client-a")
+
+    assert not session.is_full()
+
+
+def test_second_unique_client_can_join_after_duplicate():
+    session = GameSession()
+
+    session.add_client("client-a")
+    session.add_client("client-a")
+
+    team = session.add_client(
+        "client-b"
+    )
+
+    assert team == "RED"
+    assert session.is_full()
