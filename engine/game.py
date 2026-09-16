@@ -409,3 +409,75 @@ class Game:
         self.turn_phase = self.WAITING_FOR_SELECTION
 
         return False
+
+    def to_dict(self):
+        """
+        Return a JSON.
+        """
+
+        def pawn_to_dict(pawn):
+            return {
+                "id": pawn.id,
+                "team": pawn.team,
+                "row": pawn.row,
+                "col": pawn.col,
+                "active": pawn.active,
+            }
+
+        return {
+            "board_size": self.board.size,
+
+            "current_player": self.current_player.team,
+
+            "turn_phase": self.turn_phase,
+
+            "dice": self.dice.value,
+
+            "selected_pawn_id": (
+                self.selected_pawn.id
+                if self.selected_pawn is not None
+                else None
+            ),
+
+            "game_over": self.game_over,
+
+            "winner": (
+                self.winner.team
+                if self.winner is not None
+                else None
+            ),
+
+            "pattern": {
+                "name": self.pattern.name,
+                "size": self.pattern.size,
+                "grid": self.pattern.grid,
+            },
+
+            "players": {
+                "BLUE": {
+                    "captures_suffered": self.blue.captures_suffered,
+                    "respawns": self.blue.respawns,
+                    "reserve": [
+                        pawn.id
+                        for pawn in self.blue.reserve
+                    ],
+                    "pawns": [
+                        pawn_to_dict(pawn)
+                        for pawn in self.blue.pawns
+                    ],
+                },
+
+                "RED": {
+                    "captures_suffered": self.red.captures_suffered,
+                    "respawns": self.red.respawns,
+                    "reserve": [
+                        pawn.id
+                        for pawn in self.red.reserve
+                    ],
+                    "pawns": [
+                        pawn_to_dict(pawn)
+                        for pawn in self.red.pawns
+                    ],
+                },
+            },
+        }
