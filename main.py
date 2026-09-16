@@ -283,23 +283,34 @@ while running:
                 # NORMAL GAMEPLAY
                 # -------------------------
 
-                if renderer.dice_button.collidepoint(event.pos):
+                # Ignore human gameplay input while the AI controls the turn.
+                ai_turn = (
+                    game.ai_controller is not None
+                    and game.current_player.team == game.ai_controller.team
+                )
 
+                if ai_turn:
+                    continue
+
+                if renderer.dice_button.collidepoint(event.pos):
                     game.roll_dice()
                     continue
 
                 cell = input_manager.get_clicked_cell(event.pos)
 
                 if cell is not None:
-
                     row, col = cell
                     game.handle_click(row, col)
 
             elif event.type == pygame.KEYDOWN:
-
                 if event.key == pygame.K_SPACE:
 
-                    if not game.game_over:
+                    ai_turn = (
+                        game.ai_controller is not None
+                        and game.current_player.team == game.ai_controller.team
+                    )
+
+                    if not game.game_over and not ai_turn:
                         game.roll_dice()
 
                 elif event.key == pygame.K_ESCAPE:

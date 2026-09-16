@@ -153,6 +153,50 @@ class Game:
     def get_valid_moves(self):
         return Movement.get_valid_moves(self)
 
+    def get_legal_actions(self, player=None):
+        """
+        Return every legal pawn move for a player in the current
+        game state.
+
+        Each action is represented as:
+
+            (pawn, target_row, target_col)
+
+        This method does not modify the game.
+        """
+
+        if self.game_over:
+            return []
+
+        if self.dice.value is None:
+            return []
+
+        if player is None:
+            player = self.current_player
+
+        # Only the current player can have legal actions.
+        if player != self.current_player:
+            return []
+
+        actions = []
+
+        for pawn in player.pawns:
+
+            if not pawn.active:
+                continue
+
+            valid_moves = Movement.get_valid_moves_for_pawn(
+                self,
+                pawn
+            )
+
+            for row, col in valid_moves:
+                actions.append(
+                    (pawn, row, col)
+                )
+
+        return actions
+
     def move_selected_pawn(self, row, col):
         if self.game_over or self.turn_phase != self.WAITING_FOR_MOVE or self.selected_pawn is None:
             return False
