@@ -106,3 +106,48 @@ def test_rejects_missing_data():
     }
 
     assert not Protocol.is_valid(message)
+
+def test_create_room_message():
+    message = Protocol.create_room()
+
+    assert message == {
+        "version": Protocol.VERSION,
+        "type": Protocol.CREATE_ROOM,
+        "data": {},
+    }
+
+    assert Protocol.is_valid(message)
+
+
+def test_join_room_message():
+    message = Protocol.join_room(
+        "ABC123"
+    )
+
+    assert message == {
+        "version": Protocol.VERSION,
+        "type": Protocol.JOIN_ROOM,
+        "data": {
+            "room_code": "ABC123",
+        },
+    }
+
+    assert Protocol.is_valid(message)
+
+
+def test_room_joined_message():
+    message = Protocol.room_joined(
+        "ABC123",
+        "BLUE"
+    )
+
+    assert message == {
+        "version": Protocol.VERSION,
+        "type": Protocol.ROOM_JOINED,
+        "data": {
+            "room_code": "ABC123",
+            "team": "BLUE",
+        },
+    }
+
+    assert Protocol.is_valid(message)
