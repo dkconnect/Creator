@@ -24,7 +24,10 @@ class JsonTransport:
         """
 
         if isinstance(data, bytes):
-            data = data.decode("utf-8")
+            try:
+                data = data.decode("utf-8")
+            except UnicodeDecodeError:
+                return None
 
         data = data.strip()
 

@@ -23,6 +23,9 @@ class ConnectionRouter:
             )
 
         message_type = message["type"]
+        data = message.get("data")
+        if not isinstance(data, dict):
+            return Protocol.error("Invalid message data")
 
         if message_type == Protocol.CREATE_ROOM:
             return self._handle_create_room(

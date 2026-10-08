@@ -7,10 +7,14 @@ class TcpGameClient:
     def __init__(
         self,
         host="127.0.0.1",
-        port=5555
+        port=5555,
+        timeout=3.0,
+        max_message_bytes=262144
     ):
         self.host = host
         self.port = port
+        self.timeout = timeout
+        self.max_message_bytes = max_message_bytes
 
         self.socket = None
         self.buffer = b""
@@ -29,6 +33,7 @@ class TcpGameClient:
         )
 
         try:
+            client_socket.settimeout(self.timeout)
             client_socket.connect(
                 (self.host, self.port)
             )
@@ -105,12 +110,18 @@ class TcpGameClient:
                 return None
 
             self.buffer += data
+            if len(self.buffer) > self.max_message_bytes and b"\n" not in self.buffer:
+                self.disconnect()
+                return None
 
         line, self.buffer = self.buffer.split(
             b"\n",
             1
         )
 
+        if len(line) > self.max_message_bytes:
+            self.disconnect()
+            return None
         return JsonTransport.decode(
             line
         )

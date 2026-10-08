@@ -12,10 +12,14 @@ class TcpGameServer:
         self,
         host="127.0.0.1",
         port=5555,
-        router=None
+        router=None,
+        client_timeout=15.0,
+        max_message_bytes=262144
     ):
         self.host = host
         self.port = port
+        self.client_timeout = client_timeout
+        self.max_message_bytes = max_message_bytes
 
         self.router = (
             router
@@ -97,6 +101,7 @@ class TcpGameServer:
         """
 
         buffer = b""
+        client_socket.settimeout(self.client_timeout)
 
         try:
             while self.running:
@@ -108,6 +113,9 @@ class TcpGameServer:
                     break
 
                 buffer += data
+                if len(buffer) > self.max_message_bytes and b"\n" not in buffer:
+                    client_socket.sendall(JsonTransport.encode(Protocol.error("Message too large")))
+                    break
 
                 while b"\n" in buffer:
                     line, buffer = buffer.split(
@@ -115,6 +123,10 @@ class TcpGameServer:
                         1
                     )
 
+                    if len(line) > self.max_message_bytes:
+                        response = Protocol.error("Message too large")
+                        client_socket.sendall(JsonTransport.encode(response))
+                        return
                     message = JsonTransport.decode(
                         line
                     )
@@ -139,7 +151,8 @@ class TcpGameServer:
 
         except (
             ConnectionError,
-            OSError
+            OSError,
+            ValueError
         ):
             pass
 
