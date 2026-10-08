@@ -21,6 +21,8 @@ class LiveSync:
         self.update_count = 0
 
         self._signature = self._make_signature()
+        self.reconnect_attempt_ms = 2000
+        self.last_reconnect_attempt = 0
 
     def _make_signature(self):
         state = self.multiplayer.game_state
@@ -61,6 +63,15 @@ class LiveSync:
             return False
 
         self.last_check = now
+
+        if self.multiplayer.client.socket is None:
+            if now - self.last_reconnect_attempt < self.reconnect_attempt_ms:
+                return False
+            self.last_reconnect_attempt = now
+            if not self.multiplayer.reconnect():
+                self.connected = False
+                self.last_error = "Reconnecting..."
+                return False
 
         try:
             response = self.multiplayer.get_state()

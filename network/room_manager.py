@@ -68,6 +68,12 @@ class RoomManager:
             client_id
         )
 
+    def reconnect_room(self, room_code, client_id, token):
+        session = self.get_room(room_code)
+        if session is None:
+            return None
+        return session.reconnect(client_id, token)
+
     def get_room(self, room_code):
         return self.rooms.get(
             room_code.upper()

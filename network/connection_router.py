@@ -35,6 +35,9 @@ class ConnectionRouter:
                 message["data"]
             )
 
+        if message_type == Protocol.REJOIN_ROOM:
+            return self._handle_rejoin_room(client_id, message["data"])
+
         room_code = self.client_rooms.get(
             client_id
         )
@@ -74,8 +77,8 @@ class ConnectionRouter:
         self.client_rooms[client_id] = room_code
 
         return Protocol.room_joined(
-            room_code,
-            team
+            room_code, team,
+            self.room_manager.get_room(room_code).reconnect_tokens[team]
         )
 
     def _handle_join_room(self, client_id, data):
@@ -108,10 +111,27 @@ class ConnectionRouter:
         self.client_rooms[client_id] = room_code
 
         return Protocol.room_joined(
-            room_code,
-            team
+            room_code, team,
+            self.room_manager.get_room(room_code).reconnect_tokens[team]
         )
     
+    def _handle_rejoin_room(self, client_id, data):
+        if client_id in self.client_rooms:
+            return Protocol.error("Client is already in a room")
+        code = data.get("room_code")
+        token = data.get("reconnect_token")
+        if not isinstance(code, str) or not isinstance(token, str):
+            return Protocol.error("Invalid reconnect credentials")
+        code = code.upper()
+        team = self.room_manager.reconnect_room(code, client_id, token)
+        if team is None:
+            return Protocol.error("Unable to rejoin room")
+        self.client_rooms[client_id] = code
+        return Protocol.room_joined(
+            code, team,
+            self.room_manager.get_room(code).reconnect_tokens[team]
+        )
+
     def remove_client(self, client_id):
         """
         Remove a disconnected client from its current room.

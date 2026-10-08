@@ -19,6 +19,8 @@ class MultiplayerClient:
 
         self.game_state = ClientGameState()
         self.lobby_state = None
+        self.reconnect_token = None
+        self.room_status = None
 
     def connect(self):
         return self.client.connect()
@@ -29,6 +31,8 @@ class MultiplayerClient:
         self.room_code = None
         self.team = None
         self.lobby_state = None
+        self.reconnect_token = None
+        self.room_status = None
 
     def create_room(self):
         response = self.client.request(
@@ -49,6 +53,22 @@ class MultiplayerClient:
         return self._handle_room_response(
             response
         )
+
+    def reconnect(self):
+        if not self.room_code or not self.reconnect_token:
+            return False
+        if self.client.socket is not None:
+            self.client.disconnect()
+        if not self.client.connect():
+            return False
+        response = self.client.request(
+            Protocol.rejoin_room(self.room_code, self.reconnect_token)
+        )
+        if not response or response.get("type") != Protocol.ROOM_JOINED:
+            self.client.disconnect()
+            return False
+        self._handle_room_response(response)
+        return True
 
     def get_lobby(self):
         response = self.client.request(Protocol.get_lobby())
@@ -116,6 +136,7 @@ class MultiplayerClient:
 
         self.room_code = data["room_code"]
         self.team = data["team"]
+        self.reconnect_token = data.get("reconnect_token", self.reconnect_token)
 
         return response
 
@@ -132,6 +153,7 @@ class MultiplayerClient:
         ):
             return False
 
+        self.room_status = response.get("room_status", self.room_status)
         return self.game_state.update(
             response["data"]
         )

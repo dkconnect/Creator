@@ -144,7 +144,9 @@ class MultiplayerHUD:
             self.small_font
         )
 
+        paused = (multiplayer.room_status or {}).get("paused", False)
         status = (
+            "PAUSED" if paused and sync.connected else
             "LIVE"
             if sync.connected
             else "CONNECTION LOST"
@@ -152,7 +154,7 @@ class MultiplayerHUD:
 
         status_color = (
             self.GREEN
-            if sync.connected
+            if sync.connected and not paused
             else self.AMBER
         )
 
@@ -171,7 +173,7 @@ class MultiplayerHUD:
         )
 
         self._text(
-            "R: Refresh",
+            "Waiting for player" if paused else "R: Refresh",
             width - 115,
             43,
             self.MUTED,

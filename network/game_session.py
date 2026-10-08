@@ -1,3 +1,5 @@
+import secrets
+
 from engine.game import Game
 from network.server_handler import ServerHandler
 
@@ -11,6 +13,8 @@ class GameSession:
         self.red_client = None
         self.ready = {"BLUE": False, "RED": False}
         self.started = False
+        self.reconnect_tokens = {}
+        self.disconnected = set()
 
     def add_client(self, client_id):
         """
@@ -37,11 +41,13 @@ class GameSession:
         if self.blue_client is None:
             self.blue_client = client_id
             self.ready["BLUE"] = False
+            self.reconnect_tokens["BLUE"] = secrets.token_urlsafe(32)
             return "BLUE"
 
         if self.red_client is None:
             self.red_client = client_id
             self.ready["RED"] = False
+            self.reconnect_tokens["RED"] = secrets.token_urlsafe(32)
             return "RED"
 
         return None
@@ -55,16 +61,44 @@ class GameSession:
         """
 
         if self.blue_client == client_id:
+            if self.started:
+                self.disconnected.add("BLUE")
+                return "BLUE"
+            self.reconnect_tokens.pop("BLUE", None)
             self.blue_client = None
             self.ready["BLUE"] = False
+            self.reconnect_tokens["BLUE"] = secrets.token_urlsafe(32)
             return "BLUE"
 
         if self.red_client == client_id:
+            if self.started:
+                self.disconnected.add("RED")
+                return "RED"
+            self.reconnect_tokens.pop("RED", None)
             self.red_client = None
             self.ready["RED"] = False
+            self.reconnect_tokens["RED"] = secrets.token_urlsafe(32)
             return "RED"
 
         return None
+
+    def reconnect(self, client_id, token):
+        if not self.started or not isinstance(token, str):
+            return None
+        for team in ("BLUE", "RED"):
+            if (team in self.disconnected
+                    and secrets.compare_digest(self.reconnect_tokens.get(team, ""), token)):
+                if team == "BLUE":
+                    self.blue_client = client_id
+                else:
+                    self.red_client = client_id
+                self.disconnected.remove(team)
+                return team
+        return None
+
+    @property
+    def paused(self):
+        return self.started and bool(self.disconnected)
 
     def get_client_team(self, client_id):
         if self.blue_client == client_id:
@@ -84,10 +118,11 @@ class GameSession:
     def lobby_state(self):
         return {
             "players": {
-                "BLUE": {"connected": self.blue_client is not None, "ready": self.ready["BLUE"]},
-                "RED": {"connected": self.red_client is not None, "ready": self.ready["RED"]},
+                "BLUE": {"connected": self.blue_client is not None and "BLUE" not in self.disconnected, "ready": self.ready["BLUE"]},
+                "RED": {"connected": self.red_client is not None and "RED" not in self.disconnected, "ready": self.ready["RED"]},
             },
             "started": self.started,
+            "paused": self.paused,
         }
 
     def handle_client_message(self, client_id, message):
@@ -114,9 +149,14 @@ class GameSession:
             if self.is_full() and all(self.ready.values()):
                 self.started = True
             return Protocol.lobby_state(self.lobby_state())
+        if kind in (Protocol.ROLL, Protocol.MOVE) and self.paused:
+            return Protocol.error("Match paused: waiting for player to reconnect")
         if kind in (Protocol.ROLL, Protocol.MOVE) and not self.started:
             return Protocol.error("Match has not started")
-        return self.handler.handle_message(
+        response = self.handler.handle_message(
             message,
             client_team=team
         )
+        if response.get("type") == Protocol.GAME_STATE:
+            response["room_status"] = self.lobby_state()
+        return response

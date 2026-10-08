@@ -10,6 +10,7 @@ class Protocol:
     GET_STATE = "GET_STATE"
     GET_LOBBY = "GET_LOBBY"
     SET_READY = "SET_READY"
+    REJOIN_ROOM = "REJOIN_ROOM"
     LOBBY_STATE = "LOBBY_STATE"
     ERROR = "ERROR"
 
@@ -52,13 +53,19 @@ class Protocol:
         }
 
     @classmethod
-    def room_joined(cls, room_code, team):
+    def rejoin_room(cls, room_code, reconnect_token):
+        return {"version": cls.VERSION, "type": cls.REJOIN_ROOM,
+                "data": {"room_code": room_code, "reconnect_token": reconnect_token}}
+
+    @classmethod
+    def room_joined(cls, room_code, team, reconnect_token=None):
         return {
             "version": cls.VERSION,
             "type": cls.ROOM_JOINED,
             "data": {
                 "room_code": room_code,
                 "team": team,
+                **({"reconnect_token": reconnect_token} if reconnect_token else {}),
             },
         }
 
@@ -118,6 +125,7 @@ class Protocol:
             cls.GET_STATE,
             cls.GET_LOBBY,
             cls.SET_READY,
+            cls.REJOIN_ROOM,
             cls.LOBBY_STATE,
             cls.ERROR,
         ):

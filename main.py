@@ -169,7 +169,7 @@ def network_roll():
     if multiplayer is None or network_game is None:
         return False
 
-    if network_game.game_over:
+    if network_game.game_over or (multiplayer.room_status or {}).get("paused"):
         return False
 
     if network_game.current_player is None:
@@ -420,7 +420,7 @@ while running:
 
                 if event.type == pygame.MOUSEBUTTONDOWN:
 
-                    if network_game.game_over:
+                    if network_game.game_over or (multiplayer.room_status or {}).get("paused"):
                         continue
 
                     if (
