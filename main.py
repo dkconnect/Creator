@@ -28,8 +28,7 @@ WIDTH, HEIGHT = 1200, 900
 # Render the existing fixed-coordinate UI to a virtual canvas. The actual
 # decorated Windows window can resize independently without clipping the board.
 from ui.viewport import Viewport
-from ui.native_board import draw_native_board
-from ui.native_hud import draw_native_hud
+from ui.native_scene import draw_native_scene
 viewport = Viewport(WIDTH, HEIGHT)
 window = pygame.display.set_mode(viewport.initial_size(), pygame.RESIZABLE)
 screen = pygame.Surface((WIDTH, HEIGHT)).convert()
@@ -730,8 +729,7 @@ while running:
     if menu_state.current_state == MenuState.IN_GAME:
         active_renderer = network_renderer if network_game is not None else renderer
         if active_renderer is not None:
-            draw_native_board(window, viewport, active_renderer)
-            draw_native_hud(window, viewport, active_renderer)
+            draw_native_scene(window, viewport, active_renderer)
     pygame.display.flip()
     clock.tick(60)
 

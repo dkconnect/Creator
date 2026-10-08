@@ -5,6 +5,14 @@ rectangles and circles are rasterized on the physical display surface, with
 the same virtual geometry and input hitboxes as Renderer.
 """
 import pygame
+from pygame import gfxdraw
+
+
+def _smooth_disc(surface, center, radius, color):
+    """Filled circle with antialiased perimeter at display resolution."""
+    gfxdraw.filled_circle(surface, center[0], center[1], radius, color)
+    gfxdraw.aacircle(surface, center[0], center[1], radius, color)
+
 
 
 def draw_native_board(window, viewport, renderer):
@@ -89,9 +97,9 @@ def draw_native_board(window, viewport, renderer):
                 cx = x(bx + (c+.5)*cell)
                 cy = y(by + (r+.5)*cell)
                 team_color = renderer.BLUE if pawn.team == "BLUE" else renderer.RED
-                pygame.draw.circle(window, (7, 15, 25),
-                                   (cx + radius(2), cy + radius(3)), radius(19))
-                pygame.draw.circle(window, team_color, (cx, cy), radius(17))
+                _smooth_disc(window, (cx + radius(2), cy + radius(3)),
+                             radius(19), (7, 15, 25))
+                _smooth_disc(window, (cx, cy), radius(17), team_color)
                 pygame.draw.circle(window, (219, 238, 249),
                                    (cx-radius(4), cy-radius(5)),
                                    radius(5), max(1, radius(1)))
