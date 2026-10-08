@@ -70,5 +70,10 @@ class Viewport:
         window.fill((8, 16, 26))
         w = round(self.virtual_width * self.scale)
         h = round(self.virtual_height * self.scale)
-        scaled = pygame.transform.smoothscale(canvas, (w, h))
+        # Nearest-neighbour avoids the interpolation blur introduced by
+        # smoothscale on text, pawn outlines, and 1px board strokes.
+        # Always scale from the original virtual canvas, never from a
+        # previously scaled frame.
+        scaled = (canvas if (w, h) == canvas.get_size()
+                  else pygame.transform.scale(canvas, (w, h)))
         window.blit(scaled, self.offset)
