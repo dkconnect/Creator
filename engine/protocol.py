@@ -11,6 +11,7 @@ class Protocol:
     GET_LOBBY = "GET_LOBBY"
     SET_READY = "SET_READY"
     REJOIN_ROOM = "REJOIN_ROOM"
+    SET_REMATCH = "SET_REMATCH"
     LOBBY_STATE = "LOBBY_STATE"
     ERROR = "ERROR"
 
@@ -94,6 +95,10 @@ class Protocol:
         return {"version": cls.VERSION, "type": cls.SET_READY, "data": {"ready": ready}}
 
     @classmethod
+    def set_rematch(cls, ready):
+        return {"version": cls.VERSION, "type": cls.SET_REMATCH, "data": {"ready": ready}}
+
+    @classmethod
     def lobby_state(cls, state):
         return {"version": cls.VERSION, "type": cls.LOBBY_STATE, "data": state}
 
@@ -126,6 +131,7 @@ class Protocol:
             cls.GET_LOBBY,
             cls.SET_READY,
             cls.REJOIN_ROOM,
+            cls.SET_REMATCH,
             cls.LOBBY_STATE,
             cls.ERROR,
         ):

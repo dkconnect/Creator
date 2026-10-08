@@ -82,6 +82,12 @@ class MultiplayerClient:
             self.lobby_state = response["data"]
         return response
 
+    def set_rematch(self, ready):
+        response = self.client.request(Protocol.set_rematch(ready))
+        if response and response.get("type") == Protocol.LOBBY_STATE:
+            self.room_status = response["data"]
+        return response
+
     def get_state(self):
         response = self.client.request(
             Protocol.get_state()

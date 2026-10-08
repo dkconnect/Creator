@@ -18,6 +18,7 @@ from network.client_game_adapter import ClientGameAdapter
 from network.live_sync import LiveSync
 
 from ui.multiplayer_hud import MultiplayerHUD
+from ui.multiplayer_result import MultiplayerResult
 
 
 pygame.init()
@@ -42,6 +43,7 @@ network_selected_pawn_id = None
 network_sync = None
 
 multiplayer_hud = MultiplayerHUD(screen)
+multiplayer_result = MultiplayerResult(screen)
 
 clock = pygame.time.Clock()
 running = True
@@ -420,7 +422,24 @@ while running:
 
                 if event.type == pygame.MOUSEBUTTONDOWN:
 
-                    if network_game.game_over or (multiplayer.room_status or {}).get("paused"):
+                    if network_game.game_over:
+                        if multiplayer_result.menu_button.collidepoint(event.pos):
+                            multiplayer.disconnect()
+                            multiplayer = None
+                            network_game = None
+                            network_renderer = None
+                            network_input_manager = None
+                            network_sync = None
+                            network_selected_pawn_id = None
+                            menu_state.reset()
+                        elif multiplayer_result.rematch_button.collidepoint(event.pos):
+                            status = multiplayer.room_status or {}
+                            if not status.get("paused"):
+                                current_vote = status.get("rematch", {}).get(multiplayer.team, False)
+                                multiplayer.set_rematch(not current_vote)
+                        continue
+
+                    if (multiplayer.room_status or {}).get("paused"):
                         continue
 
                     if (
@@ -620,6 +639,7 @@ while running:
                 network_game,
                 network_sync
             )
+            multiplayer_result.draw(multiplayer, network_game)
 
         else:
 

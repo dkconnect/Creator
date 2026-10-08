@@ -15,6 +15,8 @@ class GameSession:
         self.started = False
         self.reconnect_tokens = {}
         self.disconnected = set()
+        self.rematch = {"BLUE": False, "RED": False}
+        self.match_number = 1
 
     def add_client(self, client_id):
         """
@@ -123,6 +125,8 @@ class GameSession:
             },
             "started": self.started,
             "paused": self.paused,
+            "rematch": dict(self.rematch),
+            "match_number": self.match_number,
         }
 
     def handle_client_message(self, client_id, message):
@@ -148,6 +152,21 @@ class GameSession:
             self.ready[team] = ready
             if self.is_full() and all(self.ready.values()):
                 self.started = True
+            return Protocol.lobby_state(self.lobby_state())
+        if kind == Protocol.SET_REMATCH:
+            if not self.started or not self.game.game_over:
+                return Protocol.error("Rematch is available only after the match ends")
+            if self.paused:
+                return Protocol.error("Match paused: waiting for player to reconnect")
+            ready = message.get("data", {}).get("ready")
+            if type(ready) is not bool:
+                return Protocol.error("Rematch vote must be a boolean")
+            self.rematch[team] = ready
+            if all(self.rematch.values()):
+                self.game = Game()
+                self.handler = ServerHandler(self.game)
+                self.rematch = {"BLUE": False, "RED": False}
+                self.match_number += 1
             return Protocol.lobby_state(self.lobby_state())
         if kind in (Protocol.ROLL, Protocol.MOVE) and self.paused:
             return Protocol.error("Match paused: waiting for player to reconnect")
