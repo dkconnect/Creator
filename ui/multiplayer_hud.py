@@ -128,6 +128,11 @@ class MultiplayerHUD:
             str(phase).replace("_", " ").title()
         )
 
+        if paused := (multiplayer.room_status or {}).get("paused", False):
+            phase_text = "Waiting for player to reconnect"
+        elif not is_your_turn and not game.game_over:
+            phase_text = "Waiting for opponent"
+
         if game.game_over:
             winner = (
                 game.winner.team
@@ -179,3 +184,19 @@ class MultiplayerHUD:
             self.MUTED,
             self.small_font
         )
+        event = (multiplayer.room_status or {}).get("last_event")
+        if event and not game.game_over:
+            if event.get("type") == "ROLL":
+                detail = f"{event.get('team')} rolled {event.get('value')}"
+            elif event.get("type") == "MOVE":
+                detail = (f"{event.get('team')} pawn {event.get('pawn_id')} "
+                          f"to ({event.get('row')}, {event.get('col')})")
+                if event.get("captures", 0):
+                    detail += f"  |  CAPTURE x{event['captures']}"
+            else:
+                detail = ""
+            if detail:
+                notice = self.small_font.render(detail, True, self.AMBER)
+                box = pygame.Rect(12, 73, min(width - 24, notice.get_width() + 28), 29)
+                pygame.draw.rect(self.screen, self.PANEL, box, border_radius=7)
+                self.screen.blit(notice, (box.x + 12, box.y + 6))

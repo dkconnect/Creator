@@ -17,6 +17,8 @@ class GameSession:
         self.disconnected = set()
         self.rematch = {"BLUE": False, "RED": False}
         self.match_number = 1
+        self.event_id = 0
+        self.last_event = None
 
     def add_client(self, client_id):
         """
@@ -127,6 +129,8 @@ class GameSession:
             "paused": self.paused,
             "rematch": dict(self.rematch),
             "match_number": self.match_number,
+            "event_id": self.event_id,
+            "last_event": self.last_event,
         }
 
     def handle_client_message(self, client_id, message):
@@ -167,15 +171,36 @@ class GameSession:
                 self.handler = ServerHandler(self.game)
                 self.rematch = {"BLUE": False, "RED": False}
                 self.match_number += 1
+                self.event_id = 0
+                self.last_event = None
             return Protocol.lobby_state(self.lobby_state())
         if kind in (Protocol.ROLL, Protocol.MOVE) and self.paused:
             return Protocol.error("Match paused: waiting for player to reconnect")
         if kind in (Protocol.ROLL, Protocol.MOVE) and not self.started:
             return Protocol.error("Match has not started")
+        before = None
+        if kind == Protocol.MOVE:
+            before = {p.id: (p.row, p.col, p.active)
+                      for player in (self.game.blue, self.game.red)
+                      for p in player.pawns}
         response = self.handler.handle_message(
             message,
             client_team=team
         )
+        if response.get("type") == Protocol.GAME_STATE and kind in (Protocol.ROLL, Protocol.MOVE):
+            self.event_id += 1
+            if kind == Protocol.ROLL:
+                self.last_event = {"type": "ROLL", "team": team,
+                                   "value": self.game.dice.value, "id": self.event_id}
+            else:
+                data = message["data"]
+                victims = [p for player in (self.game.blue, self.game.red)
+                           if player.team != team for p in player.pawns
+                           if before[p.id] != (p.row, p.col, p.active)]
+                self.last_event = {"type": "MOVE", "team": team,
+                                   "pawn_id": data["pawn_id"],
+                                   "row": data["row"], "col": data["col"],
+                                   "captures": len(victims), "id": self.event_id}
         if response.get("type") == Protocol.GAME_STATE:
             response["room_status"] = self.lobby_state()
         return response

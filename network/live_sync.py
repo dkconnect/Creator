@@ -51,6 +51,7 @@ class LiveSync:
             state.winner,
             state.selected_pawn_id,
             (self.multiplayer.room_status or {}).get("match_number", 1),
+            (self.multiplayer.room_status or {}).get("event_id", 0),
             tuple(sorted(pawn_data, key=str)),
         )
 
