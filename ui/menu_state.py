@@ -15,6 +15,8 @@ class MenuState:
 
     def __init__(self):
         self.current_state = self.MODE_SELECT
+        self.status_message = ""
+        self.show_help = False
         self.selected_mode = None          # "ONLINE", "AI", "ROOM"
         self.selected_difficulty = None    # "EASY", "LEARNING", "ADVANCED"
         self.selected_pattern = None       # filename string, e.g. "A.json"
@@ -36,6 +38,8 @@ class MenuState:
 
     def reset(self):
         self.current_state = self.MODE_SELECT
+        self.status_message = ""
+        self.show_help = False
         self.selected_mode = None
         self.selected_difficulty = None
         self.room_action = None

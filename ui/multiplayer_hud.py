@@ -9,8 +9,8 @@ class MultiplayerHUD:
     MUTED = (175, 185, 205)
     GREEN = (75, 215, 145)
     AMBER = (255, 195, 90)
-    PANEL = (20, 25, 38)
-    BORDER = (60, 72, 95)
+    PANEL = (20, 33, 49)
+    BORDER = (48, 78, 103)
 
     def __init__(self, screen):
         self.screen = screen
@@ -39,10 +39,10 @@ class MultiplayerHUD:
         width = self.screen.get_width()
 
         panel = pygame.Rect(
-            12,
+            829,
             10,
-            width - 24,
-            58
+            max(0, width - 845),
+            65
         )
 
         pygame.draw.rect(
@@ -87,8 +87,8 @@ class MultiplayerHUD:
 
         self._text(
             f"YOU: {your_team}",
-            28,
-            18,
+            841,
+            15,
             team_color
         )
 
@@ -96,8 +96,8 @@ class MultiplayerHUD:
 
         self._text(
             f"ROOM {room}",
-            28,
-            43,
+            841,
+            42,
             self.MUTED,
             self.small_font
         )
@@ -110,8 +110,8 @@ class MultiplayerHUD:
 
         self._text(
             turn_label,
-            width // 2 - 100,
-            18,
+            975,
+            15,
             self.GREEN if is_your_turn else current_color
         )
 
@@ -143,8 +143,8 @@ class MultiplayerHUD:
 
         self._text(
             phase_text,
-            width // 2 - 100,
-            43,
+            975,
+            42,
             self.MUTED,
             self.small_font
         )
@@ -172,18 +172,12 @@ class MultiplayerHUD:
         self.screen.blit(
             status_surface,
             (
-                width - status_surface.get_width() - 28,
+                width - status_surface.get_width() - 20,
                 18
             )
         )
 
-        self._text(
-            "Waiting for player" if paused else "R: Refresh",
-            width - 115,
-            43,
-            self.MUTED,
-            self.small_font
-        )
+
         event = (multiplayer.room_status or {}).get("last_event")
         if event and not game.game_over:
             if event.get("type") == "ROLL":
@@ -197,21 +191,21 @@ class MultiplayerHUD:
                 detail = ""
             if detail:
                 notice = self.small_font.render(detail, True, self.AMBER)
-                box = pygame.Rect(12, 73, min(width - 24, notice.get_width() + 28), 29)
+                box = pygame.Rect(33, 53, min(766, notice.get_width() + 28), 27)
                 pygame.draw.rect(self.screen, self.PANEL, box, border_radius=7)
                 self.screen.blit(notice, (box.x + 12, box.y + 6))
 
         history = (multiplayer.room_status or {}).get("move_history", [])
         if history and not game.game_over:
-            panel_x = 835
+            panel_x = 829
             panel_w = max(0, width - panel_x - 14)
             if panel_w >= 160:
                 visible = history[-10:]
-                panel_h = 46 + 27 * len(visible)
-                panel = pygame.Rect(panel_x, 112, panel_w, panel_h)
+                panel_h = 46 + 23 * len(visible)
+                panel = pygame.Rect(panel_x, 567, panel_w, min(panel_h, 290))
                 pygame.draw.rect(self.screen, self.PANEL, panel, border_radius=9)
                 pygame.draw.rect(self.screen, self.BORDER, panel, 1, border_radius=9)
-                self._text("MATCH HISTORY", panel_x + 12, 125, self.WHITE, self.small_font)
+                self._text("MATCH HISTORY", panel_x + 12, 579, self.WHITE, self.small_font)
                 for i, entry in enumerate(reversed(visible)):
                     if entry.get("type") == "ROLL":
                         line = f"#{entry.get('id')} {entry.get('team')} rolled {entry.get('value')}"
@@ -229,4 +223,4 @@ class MultiplayerHUD:
                         while len(line) > 3 and label.get_width() > available:
                             line = line[:-2] + "…"
                             label = self.small_font.render(line, True, self.MUTED)
-                    self.screen.blit(label, (panel_x + 12, 154 + i * 27))
+                    self.screen.blit(label, (panel_x + 12, 608 + i * 23))

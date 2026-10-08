@@ -210,6 +210,26 @@ while running:
 
         elif menu_state.current_state != MenuState.IN_GAME:
 
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_h:
+                menu_state.show_help = not menu_state.show_help
+                continue
+            if menu_state.show_help:
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                    menu_state.show_help = False
+                continue
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                if menu_state.current_state in (MenuState.AI_PATTERN,):
+                    menu_state.current_state = MenuState.AI_DIFFICULTY
+                elif menu_state.current_state in (MenuState.ROOM_PATTERN, MenuState.ROOM_JOIN):
+                    menu_state.current_state = MenuState.ROOM_CHOICE
+                else:
+                    if multiplayer is not None:
+                        multiplayer.disconnect()
+                        multiplayer = None
+                    menu_state.reset()
+                menu_state.status_message = ""
+                continue
+
             if event.type == pygame.MOUSEBUTTONDOWN:
 
                 pos = event.pos
@@ -252,21 +272,17 @@ while running:
                         break
 
                     if btn_key == "MODE_ONLINE":
-
-                        menu_state.selected_mode = "ONLINE"
-                        menu_state.current_state = (
-                            MenuState.LOBBY_WAITING
-                        )
+                        menu_state.status_message = "Global matchmaking is not available yet. Choose AI or Friend Room."
 
                     elif btn_key == "MODE_AI":
-
+                        menu_state.status_message = ""
                         menu_state.selected_mode = "AI"
                         menu_state.current_state = (
                             MenuState.AI_DIFFICULTY
                         )
 
                     elif btn_key == "MODE_FRIEND ROOM":
-
+                        menu_state.status_message = ""
                         menu_state.selected_mode = "ROOM"
                         menu_state.current_state = (
                             MenuState.ROOM_CHOICE
@@ -334,8 +350,12 @@ while running:
                                     )
 
                                 else:
+                                    menu_state.status_message = (response or {}).get("message", "Could not create room. Check the server.")
                                     multiplayer.disconnect()
                                     multiplayer = None
+                            else:
+                                menu_state.status_message = "Cannot connect to the multiplayer server. Start it first."
+                                multiplayer = None
 
                         else:
                             menu_state.current_state = (
@@ -369,8 +389,12 @@ while running:
                                     )
 
                                 else:
+                                    menu_state.status_message = (response or {}).get("message", "Room not found or unavailable.")
                                     multiplayer.disconnect()
                                     multiplayer = None
+                            else:
+                                menu_state.status_message = "Cannot connect to the multiplayer server. Start it first."
+                                multiplayer = None
 
                     elif btn_key == "TOGGLE_READY":
                         if multiplayer is not None and multiplayer.lobby_state:

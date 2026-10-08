@@ -28,12 +28,12 @@ class MenuRenderer:
         self.screen.blit(btn_txt, btn_rect)
 
     def draw(self):
-        self.screen.fill((20, 22, 28))
+        self.screen.fill((12, 22, 34))
         self.buttons.clear()
 
-        # Title
-        title_surf = self.title_font.render("CREATOR", True, (240, 240, 245))
-        self.screen.blit(title_surf, (self.screen.get_width() // 2 - title_surf.get_width() // 2, 60))
+        # The launch screen owns its brand placement; submenus keep their existing header.
+        if self.state.current_state != MenuState.MODE_SELECT:
+            self._draw_submenu_shell()
 
         if self.state.current_state == MenuState.MODE_SELECT:
             self._draw_mode_select()
@@ -50,154 +50,226 @@ class MenuRenderer:
         elif self.state.current_state == MenuState.LOBBY_WAITING:
             self._draw_lobby_waiting()
 
+        self._draw_status_and_help()
+
     def _draw_mode_select(self):
-        sub_text = self.header_font.render("SELECT MODE", True, (180, 180, 190))
-        self.screen.blit(sub_text, (self.screen.get_width() // 2 - sub_text.get_width() // 2, 170))
+        """Premium launch screen; preserve the original MODE_* hit targets."""
+        w, h = self.screen.get_size()
+        sx, sy = w / 1200, h / 900
+        def R(x, y, width, height):
+            return pygame.Rect(round(x*sx), round(y*sy), round(width*sx), round(height*sy))
+        def label(text, x, y, font, color, center=False):
+            surface = font.render(text, True, color)
+            target = surface.get_rect(center=(round(x*sx), round(y*sy))) if center else (round(x*sx), round(y*sy))
+            self.screen.blit(surface, target)
 
-        modes = [
-            ("ONLINE", "Matchmaking against remote players"),
-            ("AI", "Play against local intelligent bots"),
-            ("FRIEND ROOM", "Play with friends via Room Code"),
-        ]
+        # Quiet geometric board motif on the left; no external assets.
+        motif = R(68, 250, 470, 470)
+        tile = motif.width / 8
+        for row in range(8):
+            for col in range(8):
+                rect = pygame.Rect(round(motif.x + col*tile), round(motif.y + row*tile),
+                                   round(tile)+1, round(tile)+1)
+                shade = (19, 35, 51) if (row+col)%2 == 0 else (15, 28, 42)
+                pygame.draw.rect(self.screen, shade, rect)
+                pygame.draw.rect(self.screen, (29, 48, 65), rect, 1)
+        # Distinctive abstract pieces, rather than misleading actual game positions.
+        for row, col, color in ((1,1,(59,145,229)),(2,4,(59,145,229)),
+                                (5,2,(213,91,107)),(6,6,(213,91,107))):
+            cx = round(motif.x+(col+.5)*tile)
+            cy = round(motif.y+(row+.5)*tile)
+            pygame.draw.circle(self.screen, (9, 17, 27), (cx+3,cy+4), max(8,round(tile*.27)))
+            pygame.draw.circle(self.screen, color, (cx,cy), max(8,round(tile*.27)))
+            pygame.draw.circle(self.screen, (228,239,252), (cx,cy), max(3,round(tile*.12)), 1)
+        pygame.draw.rect(self.screen, (55, 83, 108), motif, 2, border_radius=4)
 
-        start_y = 260
-        for i, (mode_key, desc) in enumerate(modes):
-            rect = pygame.Rect(self.screen.get_width() // 2 - 220, start_y + i * 110, 440, 65)
-            self.buttons[f"MODE_{mode_key}"] = rect
-            self._draw_button(rect, mode_key)
+        label('TACTICS  /  TERRITORY  /  PATTERNS', 70, 116, self.small_font, (96, 167, 218))
+        label('CREATOR', 65, 146, self.title_font, (238, 246, 255))
+        label('OWN THE BOARD.', 70, 206, self.header_font, (183, 204, 223))
+        label('Think ahead. Take space. Complete the pattern.', 70, 746,
+              self.small_font, (147, 166, 186))
 
-            desc_surf = self.small_font.render(desc, True, (140, 140, 150))
-            self.screen.blit(desc_surf, (self.screen.get_width() // 2 - desc_surf.get_width() // 2, start_y + i * 110 + 72))
+        # Right-side launch panel, with card-based actions.
+        panel = R(618, 122, 518, 650)
+        pygame.draw.rect(self.screen, (20, 32, 47), panel, border_radius=20)
+        pygame.draw.rect(self.screen, (47, 73, 98), panel, 1, border_radius=20)
+        label('CHOOSE GAME MODE', 650, 155, self.header_font, (236, 245, 254))
+        label('Every match has exactly two players', 650, 201, self.small_font, (142, 165, 187))
+
+        modes = (
+            ('AI', 'SOLO  /  AI OPPONENT', 'Train against three AI difficulty levels', True),
+            ('FRIEND ROOM', 'MULTIPLAYER  /  PRIVATE ROOM', 'Create a room or join with a code', True),
+            ('ONLINE', 'GLOBAL  /  MATCHMAKING', 'Coming in a future update', False),
+        )
+        mouse = pygame.mouse.get_pos()
+        for index, (key, title, desc, active) in enumerate(modes):
+            rect = R(650, 252+index*142, 452, 116)
+            self.buttons[f'MODE_{key}'] = rect
+            hover = active and rect.collidepoint(mouse)
+            bg = (31, 65, 91) if hover else ((27, 46, 65) if active else (24, 35, 47))
+            outline = (88, 174, 236) if hover else ((52, 86, 113) if active else (42, 57, 71))
+            pygame.draw.rect(self.screen, bg, rect, border_radius=12)
+            pygame.draw.rect(self.screen, outline, rect, 2 if hover else 1, border_radius=12)
+            accent = (92, 184, 245) if index == 0 else ((89, 197, 167) if index == 1 else (99, 112, 129))
+            pygame.draw.rect(self.screen, accent, R(650, 269+index*142, 4, 81), border_radius=2)
+            label(title, 675, 270+index*142, self.font, (241,247,253) if active else (130,144,159))
+            label(desc, 675, 310+index*142, self.small_font, (154,178,199) if active else (102,116,131))
+            label('>' if active else 'SOON', 1055 if active else 1025,
+                  290+index*142, self.small_font, accent)
+
+        label('H  HELP', 650, 723, self.small_font, (142, 165, 187))
+
+    # All coordinates below are authored on the same 1200 x 900 canvas as 47A.
+    # Scaling preserves mouse hit targets on other window sizes.
+    def _r(self, x, y, w, h):
+        sw, sh = self.screen.get_size()
+        return pygame.Rect(round(x * sw / 1200), round(y * sh / 900),
+                           round(w * sw / 1200), round(h * sh / 900))
+
+    def _text(self, value, x, y, font=None, color=(233, 243, 252), center=False):
+        surf = (font or self.font).render(str(value), True, color)
+        sw, sh = self.screen.get_size()
+        px, py = round(x * sw / 1200), round(y * sh / 900)
+        self.screen.blit(surf, surf.get_rect(center=(px, py)) if center else (px, py))
+
+    def _panel(self, x, y, w, h):
+        rect = self._r(x, y, w, h)
+        pygame.draw.rect(self.screen, (20, 32, 47), rect, border_radius=18)
+        pygame.draw.rect(self.screen, (47, 73, 98), rect, 1, border_radius=18)
+        return rect
+
+    def _draw_submenu_shell(self):
+        self._text('CREATOR', 66, 52, self.header_font)
+        self._text('TACTICS  /  TERRITORY  /  PATTERNS', 68, 102,
+                   self.small_font, (103, 163, 207))
+        pygame.draw.line(self.screen, (42, 66, 87),
+                         self._r(66, 136, 0, 0).topleft,
+                         self._r(1134, 136, 0, 0).topleft, 1)
+        self._back_button()
+
+    def _back_button(self):
+        rect = self._r(68, 779, 180, 57)
+        self.buttons['BACK'] = rect
+        self._card(rect, 'BACK', 'ESC  /  RETURN', (133, 156, 179))
+
+    def _card(self, rect, heading, subtitle, accent=(92, 184, 245),
+              selected=False, enabled=True):
+        hovered = enabled and rect.collidepoint(pygame.mouse.get_pos())
+        fill = (31, 65, 91) if hovered else ((31, 59, 76) if selected else (27, 46, 65))
+        if not enabled:
+            fill = (24, 35, 47)
+        edge = accent if (hovered or selected) else (52, 86, 113)
+        pygame.draw.rect(self.screen, fill, rect, border_radius=12)
+        pygame.draw.rect(self.screen, edge, rect, 2 if hovered or selected else 1, border_radius=12)
+        pygame.draw.rect(self.screen, accent if enabled else (78, 92, 106),
+                         pygame.Rect(rect.x, rect.y + 12, max(3, rect.width // 110),
+                                     max(4, rect.height - 24)), border_radius=2)
+        title_color = (240, 247, 253) if enabled else (130, 144, 159)
+        self.screen.blit(self.font.render(heading, True, title_color),
+                         (rect.x + 25, rect.y + max(12, rect.height // 5)))
+        if subtitle:
+            self.screen.blit(self.small_font.render(subtitle, True, (150, 176, 198)),
+                             (rect.x + 25, rect.y + max(43, rect.height // 2 + 5)))
+
+    def _page_header(self, eyebrow, heading, description):
+        self._text(eyebrow, 330, 180, self.small_font, (95, 176, 232))
+        self._text(heading, 330, 219, self.header_font)
+        self._text(description, 330, 273, self.small_font, (151, 177, 198))
 
     def _draw_ai_difficulty(self):
-        sub_text = self.header_font.render("SELECT AI DIFFICULTY", True, (180, 180, 190))
-        self.screen.blit(sub_text, (self.screen.get_width() // 2 - sub_text.get_width() // 2, 170))
-
-        diffs = [
-            ("EASY", "Basic 1-ply greedy decision-making"),
-            ("LEARNING", "Adaptive AI that counters your playstyle"),
-            ("ADVANCED", "Expectiminimax search with lookahead"),
-        ]
-
-        start_y = 260
-        for i, (diff_key, desc) in enumerate(diffs):
-            rect = pygame.Rect(self.screen.get_width() // 2 - 220, start_y + i * 110, 440, 65)
-            self.buttons[f"DIFF_{diff_key}"] = rect
-            self._draw_button(rect, diff_key)
-
-            desc_surf = self.small_font.render(desc, True, (140, 140, 150))
-            self.screen.blit(desc_surf, (self.screen.get_width() // 2 - desc_surf.get_width() // 2, start_y + i * 110 + 72))
-
-        # Back Button
-        back_rect = pygame.Rect(40, 40, 110, 45)
-        self.buttons["BACK"] = back_rect
-        self._draw_button(back_rect, "BACK", color=(60, 60, 70))
+        self._panel(302, 157, 830, 620)
+        self._page_header('SOLO CAMPAIGN  /  01', 'CHOOSE YOUR OPPONENT',
+                          'Select the intelligence level for your match.')
+        entries = (
+            ('EASY', 'A straightforward tactical opponent', (89, 197, 167)),
+            ('LEARNING', 'Adapts to your playing style', (92, 184, 245)),
+            ('ADVANCED', 'Deeper search and stronger planning', (216, 151, 104)),
+        )
+        for i, (key, description, accent) in enumerate(entries):
+            rect = self._r(332, 330 + i * 132, 768, 104)
+            self.buttons[f'DIFF_{key}'] = rect
+            self._card(rect, key, description, accent)
 
     def _draw_pattern_select(self, confirm_label):
-        sub_text = self.header_font.render("CHOOSE PATTERN", True, (180, 180, 190))
-        self.screen.blit(sub_text, (self.screen.get_width() // 2 - sub_text.get_width() // 2, 170))
-
+        self._panel(302, 157, 830, 620)
+        self._page_header('MATCH SETUP  /  02', 'SELECT VICTORY PATTERN',
+                          'Choose the formation needed to win the match.')
         patterns = self.state.available_patterns
-        start_y = 260
+        # Keep all patterns accessible, including projects with larger sets.
+        count = max(1, len(patterns))
+        columns = 2 if count > 5 else 1
+        rows = (count + columns - 1) // columns
+        available_h = 328
+        step = min(66, available_h / max(1, rows))
         for i, pat in enumerate(patterns):
-            rect = pygame.Rect(self.screen.get_width() // 2 - 180, start_y + i * 70, 360, 50)
-            is_selected = (self.state.selected_pattern == pat)
-            self.buttons[f"PATTERN_{pat}"] = rect
-            self._draw_button(rect, pat.replace(".json", ""), is_selected=is_selected)
-
-        # Start / Action Button
-        confirm_rect = pygame.Rect(self.screen.get_width() // 2 - 160, start_y + len(patterns) * 70 + 40, 320, 60)
-        self.buttons["CONFIRM_START"] = confirm_rect
-        self._draw_button(confirm_rect, confirm_label, is_selected=True, active_color=(40, 180, 80))
-
-        # Back Button
-        back_rect = pygame.Rect(40, 40, 110, 45)
-        self.buttons["BACK"] = back_rect
-        self._draw_button(back_rect, "BACK", color=(60, 60, 70))
+            col, row = (i % columns, i // columns) if columns == 2 else (0, i)
+            width = 370 if columns == 2 else 768
+            rect = self._r(332 + col * 398, 318 + row * step, width, max(35, step - 8))
+            self.buttons[f'PATTERN_{pat}'] = rect
+            self._card(rect, pat.replace('.json', '').upper(), '', (92, 184, 245),
+                       selected=self.state.selected_pattern == pat)
+        rect = self._r(332, 680, 768, 66)
+        self.buttons['CONFIRM_START'] = rect
+        self._card(rect, confirm_label, '', (89, 197, 167), selected=True)
 
     def _draw_room_choice(self):
-        sub_text = self.header_font.render("FRIEND ROOM", True, (180, 180, 190))
-        self.screen.blit(sub_text, (self.screen.get_width() // 2 - sub_text.get_width() // 2, 170))
-
-        create_rect = pygame.Rect(self.screen.get_width() // 2 - 200, 280, 400, 70)
-        join_rect = pygame.Rect(self.screen.get_width() // 2 - 200, 380, 400, 70)
-
-        self.buttons["ROOM_CREATE"] = create_rect
-        self.buttons["ROOM_JOIN"] = join_rect
-
-        self._draw_button(create_rect, "CREATE ROOM")
-        self._draw_button(join_rect, "JOIN ROOM")
-
-        back_rect = pygame.Rect(40, 40, 110, 45)
-        self.buttons["BACK"] = back_rect
-        self._draw_button(back_rect, "BACK", color=(60, 60, 70))
+        self._panel(302, 157, 830, 620)
+        self._page_header('MULTIPLAYER  /  PRIVATE ROOM', 'PLAY WITH A FRIEND',
+                          'Create a private room or enter an existing room code.')
+        for i, (key, title, desc, accent) in enumerate((
+            ('ROOM_CREATE', 'CREATE ROOM', 'Host a private match and share your code', (92, 184, 245)),
+            ('ROOM_JOIN', 'JOIN ROOM', 'Enter the six-character code from a friend', (89, 197, 167)),
+        )):
+            rect = self._r(332, 345 + i * 164, 768, 125)
+            self.buttons[key] = rect
+            self._card(rect, title, desc, accent)
+        self._text('Both players must be ready before the match starts.',
+                   332, 693, self.small_font, (145, 170, 190))
 
     def _draw_room_join(self):
-        sub_text = self.header_font.render("ENTER 6-DIGIT ROOM CODE", True, (180, 180, 190))
-        self.screen.blit(sub_text, (self.screen.get_width() // 2 - sub_text.get_width() // 2, 170))
-
-        # Code display box
-        code_box = pygame.Rect(self.screen.get_width() // 2 - 160, 270, 320, 70)
-        pygame.draw.rect(self.screen, (30, 30, 40), code_box, border_radius=8)
-        pygame.draw.rect(self.screen, (120, 120, 150), code_box, 2, border_radius=8)
-
-        display_code = self.state.room_code_input if self.state.room_code_input else "______"
-        code_surf = self.header_font.render(display_code, True, (255, 255, 255))
-        self.screen.blit(code_surf, code_surf.get_rect(center=code_box.center))
-
-        # Join button
-        can_join = len(self.state.room_code_input) == 6
-        join_btn = pygame.Rect(self.screen.get_width() // 2 - 160, 370, 320, 60)
-        self.buttons["SUBMIT_JOIN"] = join_btn
-        self._draw_button(join_btn, "JOIN MATCH", is_selected=can_join, is_active=can_join, active_color=(40, 180, 80))
-
-        back_rect = pygame.Rect(40, 40, 110, 45)
-        self.buttons["BACK"] = back_rect
-        self._draw_button(back_rect, "BACK", color=(60, 60, 70))
+        self._panel(302, 157, 830, 620)
+        self._page_header('MULTIPLAYER  /  JOIN', 'ENTER ROOM CODE',
+                          'Type the six-character code shared by the host.')
+        code_rect = self._r(332, 344, 768, 136)
+        pygame.draw.rect(self.screen, (14, 26, 39), code_rect, border_radius=12)
+        pygame.draw.rect(self.screen, (70, 115, 150), code_rect, 2, border_radius=12)
+        code = self.state.room_code_input or '_ _ _ _ _ _'
+        self._text(code, 716, 411, self.title_font, (237, 247, 255), center=True)
+        self._text('Room codes are case-insensitive.', 332, 508,
+                   self.small_font, (145, 170, 190))
+        enabled = len(self.state.room_code_input) == 6
+        rect = self._r(332, 576, 768, 84)
+        self.buttons['SUBMIT_JOIN'] = rect
+        self._card(rect, 'JOIN MATCH', 'Connect to the private room',
+                   (89, 197, 167), selected=enabled, enabled=enabled)
 
     def _draw_friend_lobby(self):
-        state = self.state
-        info = getattr(state, "lobby_data", None) or {}
-        players = info.get("players", {})
-        width = self.screen.get_width()
-        center = width // 2
-
-        title = self.header_font.render("FRIEND ROOM", True, (235, 240, 250))
-        self.screen.blit(title, title.get_rect(center=(center, 175)))
-        code = state.room_code_input or "------"
-        label = self.small_font.render("SHARE THIS ROOM CODE", True, (160, 170, 190))
-        self.screen.blit(label, label.get_rect(center=(center, 235)))
-        code_surface = self.title_font.render(code, True, (110, 190, 255))
-        self.screen.blit(code_surface, code_surface.get_rect(center=(center, 290)))
-
-        for index, team in enumerate(("BLUE", "RED")):
-            x = center - 320 + index * 330
-            rect = pygame.Rect(x, 365, 310, 145)
-            pygame.draw.rect(self.screen, (32, 38, 51), rect, border_radius=12)
-            pygame.draw.rect(self.screen, (75, 95, 125), rect, 2, border_radius=12)
-            color = (90, 160, 255) if team == "BLUE" else (245, 105, 115)
-            heading = self.header_font.render(team, True, color)
-            self.screen.blit(heading, (x + 20, 383))
+        info = getattr(self.state, 'lobby_data', None) or {}
+        players = info.get('players', {})
+        self._panel(302, 157, 830, 620)
+        self._page_header('MULTIPLAYER  /  LOBBY', 'PRIVATE MATCH LOBBY',
+                          'Share the code, then both players select READY.')
+        code = self.state.room_code_input or getattr(self.state, 'generated_room_code', '') or '------'
+        self._text('ROOM CODE', 332, 318, self.small_font, (151, 177, 198))
+        self._text(code, 332, 346, self.title_font, (110, 190, 255))
+        for i, team in enumerate(('BLUE', 'RED')):
             member = players.get(team, {})
-            connected = member.get("connected", False)
-            ready = member.get("ready", False)
-            status = "READY" if ready else ("NOT READY" if connected else "WAITING FOR PLAYER")
-            status_color = (90, 220, 145) if ready else (190, 195, 205)
-            text = self.font.render(status, True, status_color)
-            self.screen.blit(text, (x + 20, 450))
-
-        own = players.get(getattr(state, "lobby_team", None), {})
-        ready = own.get("ready", False)
-        rect = pygame.Rect(center - 170, 560, 340, 65)
-        self.buttons["TOGGLE_READY"] = rect
-        self._draw_button(rect, "CANCEL READY" if ready else "I'M READY",
-                          is_selected=True, active_color=(40, 160, 100))
-        message = "Both players ready: starting match" if info.get("started") else "Match starts automatically when both players are ready"
-        hint = self.small_font.render(message, True, (170, 180, 200))
-        self.screen.blit(hint, hint.get_rect(center=(center, 665)))
-        back_rect = pygame.Rect(40, 40, 110, 45)
-        self.buttons["BACK"] = back_rect
-        self._draw_button(back_rect, "CANCEL", color=(60, 60, 70))
+            connected = member.get('connected', False)
+            ready = member.get('ready', False)
+            status = 'READY' if ready else ('NOT READY' if connected else 'WAITING FOR PLAYER')
+            accent = (92, 184, 245) if team == 'BLUE' else (229, 105, 121)
+            rect = self._r(332 + i * 390, 430, 378, 124)
+            self._card(rect, team, status, accent, selected=ready)
+        own = players.get(getattr(self.state, 'lobby_team', None), {})
+        ready = own.get('ready', False)
+        rect = self._r(332, 594, 768, 82)
+        self.buttons['TOGGLE_READY'] = rect
+        self._card(rect, 'CANCEL READY' if ready else "I'M READY",
+                   'Waiting for both players to confirm',
+                   (89, 197, 167), selected=ready)
+        if info.get('started'):
+            self._text('Both players ready - starting match...', 332, 709,
+                       self.small_font, (89, 197, 167))
 
     def _draw_lobby_waiting(self):
         if self.state.selected_mode == "ROOM":
@@ -225,3 +297,32 @@ class MenuRenderer:
         back_rect = pygame.Rect(40, 40, 110, 45)
         self.buttons["BACK"] = back_rect
         self._draw_button(back_rect, "CANCEL", color=(60, 60, 70))
+    def _draw_status_and_help(self):
+        width, height = self.screen.get_size()
+        hint = self.small_font.render("H: Help    ESC: Back", True, (165, 175, 195))
+        self.screen.blit(hint, (24, height - 36))
+        if self.state.status_message:
+            message = self.state.status_message[:100]
+            surface = self.small_font.render(message, True, (255, 190, 125))
+            self.screen.blit(surface, surface.get_rect(center=(width // 2, height - 75)))
+        if not self.state.show_help:
+            return
+        panel = pygame.Rect(width // 2 - 340, height // 2 - 235, 680, 470)
+        pygame.draw.rect(self.screen, (29, 36, 50), panel, border_radius=14)
+        pygame.draw.rect(self.screen, (115, 150, 195), panel, 2, border_radius=14)
+        lines = [
+            "HOW TO PLAY CREATOR",
+            "Roll: click the dice or press SPACE.",
+            "Select one of your pawns, then a highlighted square.",
+            "Capture opposing pawns and complete your target pattern.",
+            "AI: play against the computer locally.",
+            "Friend Room: start the TCP server, create or join a code.",
+            "Both players must select READY to begin.",
+            "During multiplayer: R refreshes the match.",
+            "Global matchmaking is not available in v1.",
+            "Press H or ESC to close this guide.",
+        ]
+        for i, line in enumerate(lines):
+            font = self.header_font if i == 0 else self.small_font
+            surface = font.render(line, True, (235, 240, 250))
+            self.screen.blit(surface, (panel.x + 32, panel.y + 27 + i * 43))
