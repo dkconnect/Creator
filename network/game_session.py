@@ -19,6 +19,7 @@ class GameSession:
         self.match_number = 1
         self.event_id = 0
         self.last_event = None
+        self.move_history = []
 
     def add_client(self, client_id):
         """
@@ -131,6 +132,7 @@ class GameSession:
             "match_number": self.match_number,
             "event_id": self.event_id,
             "last_event": self.last_event,
+            "move_history": [dict(event) for event in self.move_history],
         }
 
     def handle_client_message(self, client_id, message):
@@ -173,6 +175,7 @@ class GameSession:
                 self.match_number += 1
                 self.event_id = 0
                 self.last_event = None
+                self.move_history = []
             return Protocol.lobby_state(self.lobby_state())
         if kind in (Protocol.ROLL, Protocol.MOVE) and self.paused:
             return Protocol.error("Match paused: waiting for player to reconnect")
@@ -201,6 +204,9 @@ class GameSession:
                                    "pawn_id": data["pawn_id"],
                                    "row": data["row"], "col": data["col"],
                                    "captures": len(victims), "id": self.event_id}
+        if self.last_event is not None and self.last_event.get("id") == self.event_id and kind in (Protocol.ROLL, Protocol.MOVE) and response.get("type") == Protocol.GAME_STATE:
+            self.move_history.append(dict(self.last_event))
+            self.move_history = self.move_history[-12:]
         if response.get("type") == Protocol.GAME_STATE:
             response["room_status"] = self.lobby_state()
         return response

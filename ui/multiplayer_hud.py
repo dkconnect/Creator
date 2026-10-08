@@ -200,3 +200,33 @@ class MultiplayerHUD:
                 box = pygame.Rect(12, 73, min(width - 24, notice.get_width() + 28), 29)
                 pygame.draw.rect(self.screen, self.PANEL, box, border_radius=7)
                 self.screen.blit(notice, (box.x + 12, box.y + 6))
+
+        history = (multiplayer.room_status or {}).get("move_history", [])
+        if history and not game.game_over:
+            panel_x = 835
+            panel_w = max(0, width - panel_x - 14)
+            if panel_w >= 160:
+                visible = history[-10:]
+                panel_h = 46 + 27 * len(visible)
+                panel = pygame.Rect(panel_x, 112, panel_w, panel_h)
+                pygame.draw.rect(self.screen, self.PANEL, panel, border_radius=9)
+                pygame.draw.rect(self.screen, self.BORDER, panel, 1, border_radius=9)
+                self._text("MATCH HISTORY", panel_x + 12, 125, self.WHITE, self.small_font)
+                for i, entry in enumerate(reversed(visible)):
+                    if entry.get("type") == "ROLL":
+                        line = f"#{entry.get('id')} {entry.get('team')} rolled {entry.get('value')}"
+                    elif entry.get("type") == "MOVE":
+                        line = (f"#{entry.get('id')} {entry.get('team')} pawn {entry.get('pawn_id')} "
+                                f"-> ({entry.get('row')},{entry.get('col')})")
+                        if entry.get("captures", 0):
+                            line += f" x{entry['captures']}"
+                    else:
+                        continue
+                    label = self.small_font.render(line, True, self.AMBER if entry.get("captures", 0) else self.MUTED)
+                    available = panel_w - 24
+                    if label.get_width() > available:
+                        # Fit long pawn identifiers without spilling outside the panel.
+                        while len(line) > 3 and label.get_width() > available:
+                            line = line[:-2] + "…"
+                            label = self.small_font.render(line, True, self.MUTED)
+                    self.screen.blit(label, (panel_x + 12, 154 + i * 27))
