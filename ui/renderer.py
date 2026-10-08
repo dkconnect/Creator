@@ -1,3 +1,4 @@
+from ui.viewport import active_mouse_pos
 """Creator gameplay renderer: modern dark strategy UI.
 
 Retains the public board constants and button rectangles used by InputManager
@@ -116,7 +117,7 @@ class Renderer:
         self._stat('DICE RESULT', '—' if dice is None else str(dice), 199, self.GOLD)
         self._stat('VICTORY PATTERN', str(pattern.name or '—'), 267)
 
-        hover = self.dice_button.collidepoint(pygame.mouse.get_pos())
+        hover = self.dice_button.collidepoint(active_mouse_pos())
         pygame.draw.rect(self.screen, (49, 125, 182) if hover else (38, 100, 153),
                          self.dice_button, border_radius=10)
         pygame.draw.rect(self.screen, self.BLUE, self.dice_button, 2, border_radius=10)
@@ -133,40 +134,18 @@ class Renderer:
                     830, 864, self.tiny, self.MUTED)
 
         if self.game.game_over:
-            self._draw_victory()
-
-    def _draw_victory(self):
-        veil = pygame.Surface(self.screen.get_size(), pygame.SRCALPHA)
-        veil.fill((5, 12, 21, 228))
-        self.screen.blit(veil, (0, 0))
-        panel = pygame.Rect(286, 230, 628, 420)
-        pygame.draw.rect(self.screen, self.PANEL, panel, border_radius=20)
-        pygame.draw.rect(self.screen, self.EDGE, panel, 2, border_radius=20)
-        pygame.draw.line(self.screen, self.BLUE, (330, 254), (870, 254), 3)
-        winner = getattr(self.game.winner, 'team', None)
-        accent = self.BLUE if winner == 'BLUE' else self.RED if winner == 'RED' else self.GOLD
-
-        def centered(label, y, font, color):
-            surface = font.render(label, True, color)
-            self.screen.blit(surface, surface.get_rect(center=(600, y)))
-
-        centered('CREATOR / MATCH COMPLETE', 300, self.tiny, self.MUTED)
-        centered(f'{winner} VICTORY' if winner else 'MATCH COMPLETE',
-                 360, self.heading, accent)
-        centered('THE BOARD HAS BEEN DECIDED', 411, self.small, self.TEXT)
-        pattern = getattr(getattr(self.game, 'pattern', None), 'name', None)
-        if pattern:
-            centered(f'VICTORY PATTERN / {pattern}', 454, self.small, self.MUTED)
-        for rect, label, fill in (
-            (self.rematch_button, 'PLAY AGAIN', (38, 100, 153)),
-            (self.menu_button, 'MAIN MENU', self.PANEL_ALT),
-        ):
-            hover = rect.collidepoint(pygame.mouse.get_pos())
-            if hover:
-                fill = tuple(min(255, v + 18) for v in fill)
-            pygame.draw.rect(self.screen, fill, rect, border_radius=11)
-            pygame.draw.rect(self.screen, self.BLUE if hover else self.EDGE,
-                             rect, 2 if hover else 1, border_radius=11)
-            text = self.font.render(label, True, self.TEXT)
-            self.screen.blit(text, text.get_rect(center=rect.center))
-        centered('NEW MATCH / SAME RULES', 610, self.tiny, self.MUTED)
+            veil = pygame.Surface(self.screen.get_size(), pygame.SRCALPHA)
+            veil.fill((6, 13, 22, 222))
+            self.screen.blit(veil, (0, 0))
+            winner = getattr(self.game.winner, 'team', 'UNKNOWN')
+            winner_text = self.heading.render(f'{winner} WINS', True,
+                                              self.BLUE if winner == 'BLUE' else self.RED)
+            self.screen.blit(winner_text, winner_text.get_rect(center=(600, 418)))
+            for rect, title, fill in (
+                (self.rematch_button, 'REMATCH', (38, 100, 153)),
+                (self.menu_button, 'MAIN MENU', self.PANEL_ALT),
+            ):
+                pygame.draw.rect(self.screen, fill, rect, border_radius=10)
+                pygame.draw.rect(self.screen, self.EDGE, rect, 1, border_radius=10)
+                label = self.font.render(title, True, self.TEXT)
+                self.screen.blit(label, label.get_rect(center=rect.center))

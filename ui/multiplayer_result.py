@@ -1,3 +1,4 @@
+from ui.viewport import active_mouse_pos
 import pygame
 
 
@@ -71,7 +72,7 @@ class MultiplayerResult:
              (38, 100, 153), bool(status.get('paused'))),
             (self.menu_button, 'MAIN MENU', (26, 45, 64), False),
         ):
-            hover = rect.collidepoint(pygame.mouse.get_pos()) and not disabled
+            hover = rect.collidepoint(active_mouse_pos()) and not disabled
             if disabled:
                 fill = (48, 60, 72)
             elif hover:

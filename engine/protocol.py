@@ -10,6 +10,7 @@ class Protocol:
     GET_STATE = "GET_STATE"
     GET_LOBBY = "GET_LOBBY"
     SET_READY = "SET_READY"
+    SET_PATTERN = "SET_PATTERN"
     REJOIN_ROOM = "REJOIN_ROOM"
     SET_REMATCH = "SET_REMATCH"
     LOBBY_STATE = "LOBBY_STATE"
@@ -91,6 +92,10 @@ class Protocol:
         return {"version": cls.VERSION, "type": cls.GET_LOBBY, "data": {}}
 
     @classmethod
+    def set_pattern(cls, filename):
+        return {"version": cls.VERSION, "type": cls.SET_PATTERN, "data": {"filename": filename}}
+
+    @classmethod
     def set_ready(cls, ready):
         return {"version": cls.VERSION, "type": cls.SET_READY, "data": {"ready": ready}}
 
@@ -130,6 +135,7 @@ class Protocol:
             cls.GET_STATE,
             cls.GET_LOBBY,
             cls.SET_READY,
+            cls.SET_PATTERN,
             cls.REJOIN_ROOM,
             cls.SET_REMATCH,
             cls.LOBBY_STATE,

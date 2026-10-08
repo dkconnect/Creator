@@ -1,4 +1,6 @@
 import secrets
+import json
+from pathlib import Path
 
 from engine.game import Game
 from network.server_handler import ServerHandler
@@ -17,6 +19,7 @@ class GameSession:
         self.disconnected = set()
         self.rematch = {"BLUE": False, "RED": False}
         self.match_number = 1
+        self.pattern_file = None
         self.event_id = 0
         self.last_event = None
         self.move_history = []
@@ -130,6 +133,8 @@ class GameSession:
             "paused": self.paused,
             "rematch": dict(self.rematch),
             "match_number": self.match_number,
+            "pattern_file": self.pattern_file,
+            "pattern_name": self.game.pattern.name,
             "event_id": self.event_id,
             "last_event": self.last_event,
             "move_history": [dict(event) for event in self.move_history],
@@ -148,6 +153,33 @@ class GameSession:
         if team is None:
             return Protocol.error("Invalid client team")
         if kind == Protocol.GET_LOBBY:
+            return Protocol.lobby_state(self.lobby_state())
+        if kind == Protocol.SET_PATTERN:
+            if team != "BLUE":
+                return Protocol.error("Only the room creator can select a pattern")
+            if self.started or any(self.ready.values()):
+                return Protocol.error("Pattern cannot change after players ready up")
+            filename = message.get("data", {}).get("filename")
+            if not isinstance(filename, str) or not filename.endswith(".json") or Path(filename).name != filename:
+                return Protocol.error("Invalid pattern filename")
+            path = Path(__file__).resolve().parent.parent / "patterns" / filename
+            if not path.is_file():
+                return Protocol.error("Unknown victory pattern")
+            try:
+                data = json.loads(path.read_text(encoding="utf-8"))
+                size, grid = data["size"], data["grid"]
+                if (not isinstance(size, int) or size < 1 or size > 16
+                    or len(grid) != size or any(len(row) != size for row in grid)
+                    or any(value not in (0, 1) for row in grid for value in row)
+                    or not 1 <= sum(map(sum, grid)) <= 32):
+                    raise ValueError("Invalid grid")
+                name = str(data["name"])
+            except (OSError, ValueError, KeyError, TypeError):
+                return Protocol.error("Invalid pattern definition")
+            self.game.pattern.name = name
+            self.game.pattern.size = size
+            self.game.pattern.grid = grid
+            self.pattern_file = filename
             return Protocol.lobby_state(self.lobby_state())
         if kind == Protocol.SET_READY:
             ready = message.get("data", {}).get("ready")
@@ -170,6 +202,12 @@ class GameSession:
             self.rematch[team] = ready
             if all(self.rematch.values()):
                 self.game = Game()
+                if self.pattern_file:
+                    path = Path(__file__).resolve().parent.parent / "patterns" / self.pattern_file
+                    data = json.loads(path.read_text(encoding="utf-8"))
+                    self.game.pattern.name = data["name"]
+                    self.game.pattern.size = data["size"]
+                    self.game.pattern.grid = data["grid"]
                 self.handler = ServerHandler(self.game)
                 self.rematch = {"BLUE": False, "RED": False}
                 self.match_number += 1

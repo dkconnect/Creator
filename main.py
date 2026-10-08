@@ -25,7 +25,12 @@ pygame.init()
 
 WIDTH, HEIGHT = 1200, 900
 
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
+# Render the existing fixed-coordinate UI to a virtual canvas. The actual
+# decorated Windows window can resize independently without clipping the board.
+from ui.viewport import Viewport
+viewport = Viewport(WIDTH, HEIGHT)
+window = pygame.display.set_mode(viewport.initial_size(), pygame.RESIZABLE)
+screen = pygame.Surface((WIDTH, HEIGHT)).convert()
 pygame.display.set_caption("Creator")
 
 menu_state = MenuState()
@@ -204,6 +209,14 @@ while running:
     current_time = pygame.time.get_ticks()
 
     for event in pygame.event.get():
+        if event.type == pygame.VIDEORESIZE:
+            window = pygame.display.set_mode((max(640, event.w), max(480, event.h)), pygame.RESIZABLE)
+            viewport.resize(window.get_size())
+            continue
+        if event.type in (pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP, pygame.MOUSEMOTION):
+            event = viewport.translate_event(event)
+            if event is None:
+                continue
 
         if event.type == pygame.QUIT:
             running = False
@@ -312,6 +325,21 @@ while running:
                             MenuState.ROOM_JOIN
                         )
 
+                    elif btn_key.startswith("CATEGORY_"):
+                        menu_state.pattern_category = btn_key.replace("CATEGORY_", "")
+                        menu_state.pattern_page = 0
+                        candidates = [f for f in menu_state.available_patterns
+                                      if menu_state.pattern_category_for(f) == menu_state.pattern_category]
+                        if candidates:
+                            menu_state.selected_pattern = candidates[0]
+
+                    elif btn_key.startswith("PAGE_"):
+                        candidates = [f for f in menu_state.available_patterns
+                                      if menu_state.pattern_category_for(f) == menu_state.pattern_category]
+                        pages = max(1, (len(candidates) + 19) // 20)
+                        delta = -1 if btn_key == "PAGE_PREV" else 1
+                        menu_state.pattern_page = max(0, min(pages - 1, menu_state.pattern_page + delta))
+
                     elif btn_key.startswith("PATTERN_"):
 
                         menu_state.selected_pattern = (
@@ -340,6 +368,13 @@ while running:
                                     and response.get("type")
                                     == "ROOM_JOINED"
                                 ):
+
+                                    selection = multiplayer.set_pattern(menu_state.selected_pattern)
+                                    if not selection or selection.get("type") != "LOBBY_STATE":
+                                        menu_state.status_message = "Could not set room pattern: " + str((selection or {}).get("data", {}).get("message", "network error"))
+                                        multiplayer.disconnect()
+                                        multiplayer = None
+                                        continue
 
                                     menu_state.room_code_input = (
                                         multiplayer.room_code
@@ -379,6 +414,9 @@ while running:
                                     and response.get("type")
                                     == "ROOM_JOINED"
                                 ):
+
+                                    if multiplayer.get_lobby() and multiplayer.lobby_state:
+                                        menu_state.selected_pattern = multiplayer.lobby_state.get("pattern_file")
 
                                     menu_state.room_code_input = (
                                         multiplayer.room_code
@@ -684,6 +722,7 @@ while running:
 
             renderer.draw()
 
+    viewport.present(screen, window)
     pygame.display.flip()
     clock.tick(60)
 

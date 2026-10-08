@@ -1,4 +1,7 @@
+from ui.viewport import active_mouse_pos
 import pygame
+import json
+from pathlib import Path
 from ui.menu_state import MenuState
 
 
@@ -101,7 +104,7 @@ class MenuRenderer:
             ('FRIEND ROOM', 'MULTIPLAYER  /  PRIVATE ROOM', 'Create a room or join with a code', True),
             ('ONLINE', 'GLOBAL  /  MATCHMAKING', 'Coming in a future update', False),
         )
-        mouse = pygame.mouse.get_pos()
+        mouse = active_mouse_pos()
         for index, (key, title, desc, active) in enumerate(modes):
             rect = R(650, 252+index*142, 452, 116)
             self.buttons[f'MODE_{key}'] = rect
@@ -154,7 +157,7 @@ class MenuRenderer:
 
     def _card(self, rect, heading, subtitle, accent=(92, 184, 245),
               selected=False, enabled=True):
-        hovered = enabled and rect.collidepoint(pygame.mouse.get_pos())
+        hovered = enabled and rect.collidepoint(active_mouse_pos())
         fill = (31, 65, 91) if hovered else ((31, 59, 76) if selected else (27, 46, 65))
         if not enabled:
             fill = (24, 35, 47)
@@ -192,23 +195,77 @@ class MenuRenderer:
 
     def _draw_pattern_select(self, confirm_label):
         self._panel(302, 157, 830, 620)
-        self._page_header('MATCH SETUP  /  02', 'SELECT VICTORY PATTERN',
-                          'Choose the formation needed to win the match.')
-        patterns = self.state.available_patterns
-        # Keep all patterns accessible, including projects with larger sets.
-        count = max(1, len(patterns))
-        columns = 2 if count > 5 else 1
-        rows = (count + columns - 1) // columns
-        available_h = 328
-        step = min(66, available_h / max(1, rows))
-        for i, pat in enumerate(patterns):
-            col, row = (i % columns, i // columns) if columns == 2 else (0, i)
-            width = 370 if columns == 2 else 768
-            rect = self._r(332 + col * 398, 318 + row * step, width, max(35, step - 8))
-            self.buttons[f'PATTERN_{pat}'] = rect
-            self._card(rect, pat.replace('.json', '').upper(), '', (92, 184, 245),
-                       selected=self.state.selected_pattern == pat)
-        rect = self._r(332, 680, 768, 66)
+        self._page_header('MATCH SETUP  /  PATTERN LIBRARY', 'CHOOSE YOUR FORMATION',
+                          '53 formations  /  One victory condition')
+        tabs = [('LETTERS', 'A-Z'), ('NUMBERS', '1-9'),
+                ('SYMBOLS', 'SYMBOLS'), ('SHAPES', 'SHAPES')]
+        for i, (key, title) in enumerate(tabs):
+            rect = self._r(328 + i * 195, 286, 181, 43)
+            self.buttons['CATEGORY_' + key] = rect
+            selected = self.state.pattern_category == key
+            pygame.draw.rect(self.screen, (35, 92, 130) if selected else (28, 47, 65),
+                             rect, border_radius=8)
+            pygame.draw.rect(self.screen, (99, 182, 241) if selected else (54, 82, 104),
+                             rect, 2 if selected else 1, border_radius=8)
+            text = self.small_font.render(title, True, (236, 246, 253))
+            self.screen.blit(text, text.get_rect(center=rect.center))
+
+        candidates = [filename for filename in self.state.available_patterns
+                      if self.state.pattern_category_for(filename) == self.state.pattern_category]
+        page_size = 20
+        pages = max(1, (len(candidates) + page_size - 1) // page_size)
+        self.state.pattern_page = min(self.state.pattern_page, pages - 1)
+        page_items = candidates[self.state.pattern_page * page_size:
+                                (self.state.pattern_page + 1) * page_size]
+        for i, filename in enumerate(page_items):
+            col, row = i % 5, i // 5
+            rect = self._r(329 + col * 98, 352 + row * 75, 88, 64)
+            selected = self.state.selected_pattern == filename
+            pygame.draw.rect(self.screen, (37, 86, 122) if selected else (25, 45, 63),
+                             rect, border_radius=9)
+            pygame.draw.rect(self.screen, (105, 188, 250) if selected else (51, 79, 104),
+                             rect, 2 if selected else 1, border_radius=9)
+            self.buttons['PATTERN_' + filename] = rect
+            label = self.state.pattern_label(filename)
+            font = self.small_font if len(label) > 3 else self.font
+            text = font.render(label[:10], True, (237, 246, 253))
+            self.screen.blit(text, text.get_rect(center=rect.center))
+
+        if pages > 1:
+            for key, x, label in [('PREV', 333, '<'), ('NEXT', 717, '>')]:
+                rect = self._r(x, 662, 55, 38)
+                self.buttons['PAGE_' + key] = rect
+                self._draw_button(rect, label)
+            self._text(f'{self.state.pattern_page + 1} / {pages}', 569, 673,
+                       self.small_font, center=True)
+
+        preview = self._r(832, 351, 270, 309)
+        pygame.draw.rect(self.screen, (15, 29, 43), preview, border_radius=12)
+        pygame.draw.rect(self.screen, (50, 83, 110), preview, 1, border_radius=12)
+        filename = self.state.selected_pattern
+        if filename:
+            try:
+                source = Path(__file__).resolve().parent.parent / 'patterns' / filename
+                data = json.loads(source.read_text(encoding='utf-8'))
+                grid = data['grid']
+                count = sum(bool(cell) for row in grid for cell in row)
+                self._text(str(data.get('name', filename[:-5]))[:17], 852, 368,
+                           self.font, (232, 245, 255))
+                self._text(f'{count} PAWNS REQUIRED', 852, 414,
+                           self.small_font, (148, 185, 210))
+                n = len(grid)
+                cell = min(27, 190 // max(1, n))
+                origin_x = preview.centerx - n * cell // 2
+                origin_y = preview.y + 86
+                for y, row in enumerate(grid):
+                    for x, active in enumerate(row):
+                        r = pygame.Rect(origin_x + x * cell, origin_y + y * cell,
+                                        cell - 3, cell - 3)
+                        pygame.draw.rect(self.screen, (100, 184, 247) if active else
+                                         (37, 60, 79), r, border_radius=3)
+            except (OSError, ValueError, KeyError, TypeError):
+                self._text('PREVIEW UNAVAILABLE', 843, 445, self.small_font)
+        rect = self._r(833, 681, 268, 64)
         self.buttons['CONFIRM_START'] = rect
         self._card(rect, confirm_label, '', (89, 197, 167), selected=True)
 

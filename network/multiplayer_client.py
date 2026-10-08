@@ -76,6 +76,12 @@ class MultiplayerClient:
             self.lobby_state = response["data"]
         return response
 
+    def set_pattern(self, filename):
+        response = self.client.request(Protocol.set_pattern(filename))
+        if response and response.get("type") == Protocol.LOBBY_STATE:
+            self.lobby_state = response["data"]
+        return response
+
     def set_ready(self, ready):
         response = self.client.request(Protocol.set_ready(ready))
         if response and response.get("type") == Protocol.LOBBY_STATE:
