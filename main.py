@@ -15,6 +15,9 @@ from ui.menu_renderer import MenuRenderer
 
 from network.multiplayer_client import MultiplayerClient
 from network.client_game_adapter import ClientGameAdapter
+from network.live_sync import LiveSync
+
+from ui.multiplayer_hud import MultiplayerHUD
 
 
 pygame.init()
@@ -34,11 +37,15 @@ input_manager = None
 multiplayer = None
 network_game = None
 network_renderer = None
+network_input_manager = None
+network_selected_pawn_id = None
+network_sync = None
+
+multiplayer_hud = MultiplayerHUD(screen)
 
 clock = pygame.time.Clock()
 running = True
 
-# AI turn pacing timer
 ai_turn_delay_ms = 1500
 last_ai_step_time = 0
 
@@ -46,11 +53,15 @@ last_ai_step_time = 0
 def start_game():
     global game, renderer, input_manager, last_ai_step_time
     global network_game, network_renderer
+    global network_input_manager, network_selected_pawn_id
+    global network_sync
 
     network_game = None
     network_renderer = None
+    network_input_manager = None
+    network_selected_pawn_id = None
+    network_sync = None
 
-    # Reset AI pacing for every new game/rematch
     last_ai_step_time = pygame.time.get_ticks()
 
     ai_controller = None
@@ -68,7 +79,6 @@ def start_game():
 
     game = Game(ai_controller=ai_controller)
 
-    # Load custom chosen pattern if selected
     if menu_state.selected_pattern:
 
         pattern_file = (
@@ -78,12 +88,13 @@ def start_game():
         )
 
         if pattern_file.exists():
+
             with open(pattern_file, "r") as f:
                 data = json.load(f)
 
-                game.pattern.name = data["name"]
-                game.pattern.size = data["size"]
-                game.pattern.grid = data["grid"]
+            game.pattern.name = data["name"]
+            game.pattern.size = data["size"]
+            game.pattern.grid = data["grid"]
 
     renderer = Renderer(screen, game)
     input_manager = InputManager(renderer)
@@ -92,8 +103,10 @@ def start_game():
 
 
 def start_network_game():
-    global network_game, network_renderer
     global game, renderer, input_manager
+    global network_game, network_renderer
+    global network_input_manager, network_selected_pawn_id
+    global network_sync
 
     if multiplayer is None:
         return False
@@ -119,7 +132,65 @@ def start_network_game():
         network_game
     )
 
+    network_input_manager = InputManager(
+        network_renderer
+    )
+
+    network_selected_pawn_id = None
+
+    network_sync = LiveSync(
+        multiplayer,
+        network_game,
+        interval_ms=500
+    )
+
     menu_state.current_state = MenuState.IN_GAME
+
+    return True
+
+
+def refresh_network_game():
+    global network_selected_pawn_id
+
+    if network_game is None:
+        return
+
+    network_game.refresh()
+    network_selected_pawn_id = None
+
+    if network_sync is not None:
+        network_sync.acknowledge_local_update()
+
+
+def network_roll():
+
+    if multiplayer is None or network_game is None:
+        return False
+
+    if network_game.game_over:
+        return False
+
+    if network_game.current_player is None:
+        return False
+
+    if network_game.current_player.team != multiplayer.team:
+        return False
+
+    if (
+        multiplayer.game_state.turn_phase
+        != "WAITING_FOR_ROLL"
+    ):
+        return False
+
+    response = multiplayer.roll()
+
+    if (
+        response is None
+        or response.get("type") != "GAME_STATE"
+    ):
+        return False
+
+    refresh_network_game()
 
     return True
 
@@ -141,167 +212,174 @@ while running:
 
                 for btn_key, rect in menu_renderer.buttons.items():
 
-                    if rect.collidepoint(pos):
+                    if not rect.collidepoint(pos):
+                        continue
 
-                        if btn_key == "BACK":
+                    if btn_key == "BACK":
 
-                            if menu_state.current_state in (
-                                MenuState.AI_DIFFICULTY,
-                                MenuState.ROOM_CHOICE,
-                                MenuState.LOBBY_WAITING,
-                            ):
-                                if multiplayer is not None:
-                                    multiplayer.disconnect()
-                                    multiplayer = None
+                        if menu_state.current_state in (
+                            MenuState.AI_DIFFICULTY,
+                            MenuState.ROOM_CHOICE,
+                            MenuState.LOBBY_WAITING,
+                        ):
 
-                                menu_state.reset()
+                            if multiplayer is not None:
+                                multiplayer.disconnect()
+                                multiplayer = None
 
-                            elif (
-                                menu_state.current_state
-                                == MenuState.AI_PATTERN
-                            ):
-                                menu_state.current_state = (
-                                    MenuState.AI_DIFFICULTY
-                                )
+                            menu_state.reset()
 
-                            elif menu_state.current_state in (
-                                MenuState.ROOM_PATTERN,
-                                MenuState.ROOM_JOIN,
-                            ):
-                                menu_state.current_state = (
-                                    MenuState.ROOM_CHOICE
-                                )
-
-                            break
-
-                        if btn_key == "MODE_ONLINE":
-
-                            menu_state.selected_mode = "ONLINE"
-                            menu_state.current_state = (
-                                MenuState.LOBBY_WAITING
-                            )
-
-                        elif btn_key == "MODE_AI":
-
-                            menu_state.selected_mode = "AI"
+                        elif (
+                            menu_state.current_state
+                            == MenuState.AI_PATTERN
+                        ):
                             menu_state.current_state = (
                                 MenuState.AI_DIFFICULTY
                             )
 
-                        elif btn_key == "MODE_FRIEND ROOM":
-
-                            menu_state.selected_mode = "ROOM"
+                        elif menu_state.current_state in (
+                            MenuState.ROOM_PATTERN,
+                            MenuState.ROOM_JOIN,
+                        ):
                             menu_state.current_state = (
                                 MenuState.ROOM_CHOICE
                             )
 
-                        elif btn_key.startswith("DIFF_"):
+                        break
 
-                            diff = btn_key.replace("DIFF_", "")
+                    if btn_key == "MODE_ONLINE":
 
-                            menu_state.selected_difficulty = diff
-                            menu_state.current_state = (
-                                MenuState.AI_PATTERN
-                            )
+                        menu_state.selected_mode = "ONLINE"
+                        menu_state.current_state = (
+                            MenuState.LOBBY_WAITING
+                        )
 
-                        elif btn_key == "ROOM_CREATE":
+                    elif btn_key == "MODE_AI":
 
-                            menu_state.room_action = "CREATE"
-                            menu_state.current_state = (
-                                MenuState.ROOM_PATTERN
-                            )
+                        menu_state.selected_mode = "AI"
+                        menu_state.current_state = (
+                            MenuState.AI_DIFFICULTY
+                        )
 
-                        elif btn_key == "ROOM_JOIN":
+                    elif btn_key == "MODE_FRIEND ROOM":
 
-                            menu_state.room_action = "JOIN"
-                            menu_state.current_state = (
-                                MenuState.ROOM_JOIN
-                            )
+                        menu_state.selected_mode = "ROOM"
+                        menu_state.current_state = (
+                            MenuState.ROOM_CHOICE
+                        )
 
-                        elif btn_key.startswith("PATTERN_"):
+                    elif btn_key.startswith("DIFF_"):
 
-                            pat = btn_key.replace("PATTERN_", "")
-                            menu_state.selected_pattern = pat
+                        menu_state.selected_difficulty = (
+                            btn_key.replace("DIFF_", "")
+                        )
 
-                        elif btn_key == "CONFIRM_START":
+                        menu_state.current_state = (
+                            MenuState.AI_PATTERN
+                        )
 
-                            if menu_state.selected_mode == "AI":
-                                start_game()
+                    elif btn_key == "ROOM_CREATE":
 
-                            elif (
-                                menu_state.selected_mode == "ROOM"
-                                and menu_state.room_action == "CREATE"
-                            ):
+                        menu_state.room_action = "CREATE"
+                        menu_state.current_state = (
+                            MenuState.ROOM_PATTERN
+                        )
 
-                                multiplayer = MultiplayerClient()
+                    elif btn_key == "ROOM_JOIN":
 
-                                if multiplayer.connect():
+                        menu_state.room_action = "JOIN"
+                        menu_state.current_state = (
+                            MenuState.ROOM_JOIN
+                        )
 
-                                    response = multiplayer.create_room()
+                    elif btn_key.startswith("PATTERN_"):
 
-                                    if (
-                                        response is not None
-                                        and response.get("type")
-                                        == "ROOM_JOINED"
-                                    ):
-                                        menu_state.room_code_input = (
-                                            multiplayer.room_code
-                                        )
+                        menu_state.selected_pattern = (
+                            btn_key.replace("PATTERN_", "")
+                        )
 
-                                        menu_state.current_state = (
-                                            MenuState.LOBBY_WAITING
-                                        )
+                    elif btn_key == "CONFIRM_START":
 
-                                    else:
-                                        multiplayer.disconnect()
-                                        multiplayer = None
+                        if menu_state.selected_mode == "AI":
 
-                            else:
-                                menu_state.current_state = (
-                                    MenuState.LOBBY_WAITING
-                                )
+                            start_game()
 
-                        elif btn_key == "SUBMIT_JOIN":
+                        elif (
+                            menu_state.selected_mode == "ROOM"
+                            and menu_state.room_action == "CREATE"
+                        ):
 
-                            if len(menu_state.room_code_input) == 6:
+                            multiplayer = MultiplayerClient()
 
-                                multiplayer = MultiplayerClient()
+                            if multiplayer.connect():
 
-                                if multiplayer.connect():
+                                response = multiplayer.create_room()
 
-                                    response = multiplayer.join_room(
-                                        menu_state.room_code_input
+                                if (
+                                    response is not None
+                                    and response.get("type")
+                                    == "ROOM_JOINED"
+                                ):
+
+                                    menu_state.room_code_input = (
+                                        multiplayer.room_code
                                     )
 
-                                    if (
-                                        response is not None
-                                        and response.get("type")
-                                        == "ROOM_JOINED"
-                                    ):
-                                        menu_state.room_code_input = (
-                                            multiplayer.room_code
-                                        )
+                                    menu_state.current_state = (
+                                        MenuState.LOBBY_WAITING
+                                    )
 
-                                        menu_state.current_state = (
-                                            MenuState.LOBBY_WAITING
-                                        )
+                                else:
+                                    multiplayer.disconnect()
+                                    multiplayer = None
 
-                                    else:
-                                        multiplayer.disconnect()
-                                        multiplayer = None
+                        else:
+                            menu_state.current_state = (
+                                MenuState.LOBBY_WAITING
+                            )
 
-                        elif btn_key == "LAUNCH_GAME":
+                    elif btn_key == "SUBMIT_JOIN":
 
-                            if (
-                                menu_state.selected_mode == "ROOM"
-                                and multiplayer is not None
-                            ):
-                                start_network_game()
+                        if len(menu_state.room_code_input) == 6:
 
-                            else:
-                                start_game()
+                            multiplayer = MultiplayerClient()
 
-                        break
+                            if multiplayer.connect():
+
+                                response = multiplayer.join_room(
+                                    menu_state.room_code_input
+                                )
+
+                                if (
+                                    response is not None
+                                    and response.get("type")
+                                    == "ROOM_JOINED"
+                                ):
+
+                                    menu_state.room_code_input = (
+                                        multiplayer.room_code
+                                    )
+
+                                    menu_state.current_state = (
+                                        MenuState.LOBBY_WAITING
+                                    )
+
+                                else:
+                                    multiplayer.disconnect()
+                                    multiplayer = None
+
+                    elif btn_key == "LAUNCH_GAME":
+
+                        if (
+                            menu_state.selected_mode == "ROOM"
+                            and multiplayer is not None
+                        ):
+                            start_network_game()
+
+                        else:
+                            start_game()
+
+                    break
 
             elif (
                 event.type == pygame.KEYDOWN
@@ -325,89 +403,144 @@ while running:
 
         else:
 
-            # Network board is display-only for Step 36.
-            # Multiplayer input will be added in Step 37.
-            # Multiplayer input
+            # -----------------------------------------
+            # NETWORK GAMEPLAY
+            # -----------------------------------------
+
             if network_game is not None:
 
                 if event.type == pygame.MOUSEBUTTONDOWN:
 
+                    if network_game.game_over:
+                        continue
+
                     if (
-                        not network_game.game_over
-                        and network_game.current_player is not None
-                        and network_game.current_player.team
-                        == multiplayer.team
-                        and multiplayer.game_state.turn_phase
-                        == "WAITING_FOR_ROLL"
+                        network_game.current_player is None
+                        or network_game.current_player.team
+                        != multiplayer.team
+                    ):
+                        continue
+
+                    phase = multiplayer.game_state.turn_phase
+
+                    if (
+                        phase == "WAITING_FOR_ROLL"
                         and network_renderer.dice_button.collidepoint(
                             event.pos
                         )
                     ):
-                        response = multiplayer.roll()
+                        network_roll()
+                        continue
+
+                    cell = network_input_manager.get_clicked_cell(
+                        event.pos
+                    )
+
+                    if cell is None:
+                        continue
+
+                    row, col = cell
+
+                    if phase not in (
+                        "WAITING_FOR_SELECTION",
+                        "WAITING_FOR_MOVE",
+                    ):
+                        continue
+
+                    clicked_pawn = network_game.board.get_pawn(
+                        row,
+                        col
+                    )
+
+                    if (
+                        clicked_pawn is not None
+                        and clicked_pawn.team == multiplayer.team
+                        and clicked_pawn.active
+                    ):
+
+                        network_selected_pawn_id = clicked_pawn.id
+                        network_game.selected_pawn = clicked_pawn
+
+                        continue
+
+                    if network_selected_pawn_id is not None:
 
                         if (
-                            response is not None
-                            and response.get("type") == "GAME_STATE"
-                        ):
-                            network_game.refresh()
+                            row,
+                            col
+                        ) in network_game.get_valid_moves():
+
+                            response = multiplayer.move(
+                                pawn_id=network_selected_pawn_id,
+                                row=row,
+                                col=col
+                            )
+
+                            if (
+                                response is not None
+                                and response.get("type")
+                                == "GAME_STATE"
+                            ):
+                                refresh_network_game()
 
                 elif event.type == pygame.KEYDOWN:
 
                     if event.key == pygame.K_SPACE:
+                        network_roll()
 
-                        if (
-                            not network_game.game_over
-                            and network_game.current_player is not None
-                            and network_game.current_player.team
-                            == multiplayer.team
-                            and multiplayer.game_state.turn_phase
-                            == "WAITING_FOR_ROLL"
-                        ):
-                            response = multiplayer.roll()
+                    elif event.key == pygame.K_r:
 
-                            if (
-                                response is not None
-                                and response.get("type") == "GAME_STATE"
-                            ):
-                                network_game.refresh()
+                        if network_sync.poll(force=True):
+                            network_selected_pawn_id = None
 
                 continue
+
+            # -----------------------------------------
+            # LOCAL / AI GAMEPLAY
+            # -----------------------------------------
 
             if event.type == pygame.MOUSEBUTTONDOWN:
 
                 if game.game_over:
 
-                    if renderer.rematch_button.collidepoint(event.pos):
-
+                    if renderer.rematch_button.collidepoint(
+                        event.pos
+                    ):
                         start_game()
                         continue
 
-                    if renderer.menu_button.collidepoint(event.pos):
+                    if renderer.menu_button.collidepoint(
+                        event.pos
+                    ):
 
                         game = None
                         renderer = None
                         input_manager = None
 
                         menu_state.reset()
-
                         continue
 
                     continue
 
                 ai_turn = (
                     game.ai_controller is not None
-                    and game.current_player.team == game.ai_controller.team
+                    and game.current_player.team
+                    == game.ai_controller.team
                 )
 
                 if ai_turn:
                     continue
 
-                if renderer.dice_button.collidepoint(event.pos):
+                if renderer.dice_button.collidepoint(
+                    event.pos
+                ):
 
                     game.roll_dice()
                     continue
 
-                cell = input_manager.get_clicked_cell(event.pos)
+                cell = input_manager.get_clicked_cell(
+                    event.pos
+                )
 
                 if cell is not None:
 
@@ -420,7 +553,8 @@ while running:
 
                     ai_turn = (
                         game.ai_controller is not None
-                        and game.current_player.team == game.ai_controller.team
+                        and game.current_player.team
+                        == game.ai_controller.team
                     )
 
                     if not game.game_over and not ai_turn:
@@ -434,6 +568,10 @@ while running:
 
                     menu_state.reset()
 
+    # -----------------------------------------
+    # RENDERING
+    # -----------------------------------------
+
     if menu_state.current_state != MenuState.IN_GAME:
 
         menu_renderer.draw()
@@ -442,8 +580,20 @@ while running:
 
         if network_game is not None:
 
-            network_game.refresh()
+            if network_sync is not None:
+
+                changed = network_sync.poll()
+
+                if changed:
+                    network_selected_pawn_id = None
+
             network_renderer.draw()
+
+            multiplayer_hud.draw(
+                multiplayer,
+                network_game,
+                network_sync
+            )
 
         else:
 
