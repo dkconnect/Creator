@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CREATOR | Pattern Engine</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Syne & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              DEFAULT: '#88FF00',
+              hover: '#76DF00',
+              dark: '#080A07',
+              surface: '#11140F',
+              border: '#1F261B',
+              text: '#E1E7DD',
+              muted: '#727E6C'
+            }
+          },
+          fontFamily: {
+            display: ['Syne', 'sans-serif'],
+            sans: ['Inter', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #080A07;
+      color: #E1E7DD;
+      font-family: 'Inter', sans-serif;
+    }
+    .grid-bg {
+      background-size: 40px 40px;
+      background-image: 
+        linear-gradient(to right, rgba(136, 255, 0, 0.03) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(136, 255, 0, 0.03) 1px, transparent 1px);
+    }
+    .glow-effect {
+      text-shadow: 0 0 20px rgba(136, 255, 0, 0.4);
+    }
+  </style>
+</head>
+<body class="flex h-screen overflow-hidden grid-bg">
+
+  <!-- SIDEBAR NAVIGATION -->
+  <aside class="w-64 border-r border-brand-border/60 bg-brand-surface/80 backdrop-blur-md flex flex-col justify-between p-4 z-20">
+    <div class="space-y-6">
+      <!-- Logo -->
+      <div class="flex items-center gap-3 px-2">
+        <div class="w-7 h-7 bg-brand/20 border border-brand rounded flex items-center justify-center">
+          <div class="w-2.5 h-2.5 bg-brand"></div>
+        </div>
+        <div>
+          <h1 class="font-display font-extrabold text-lg leading-none tracking-wider text-white">CREATOR</h1>
+          <p class="text-[10px] text-brand-muted tracking-widest font-mono uppercase mt-0.5">Pattern Engine</p>
+        </div>
+      </div>
+
+      <!-- Quick Play Button -->
+      <button onclick="openPlayModal()" class="w-full bg-brand hover:bg-brand-hover text-black font-semibold py-2.5 px-4 rounded-md flex items-center justify-center gap-2 transition-all shadow-[0_0_15px_rgba(136,255,0,0.2)]">
+        <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        Quick Play
+      </button>
+
+      <!-- Nav Links -->
+      <nav class="space-y-1">
+        <button onclick="openPlayModal()" class="w-full flex items-center justify-between px-3 py-2 rounded-md bg-brand-border/40 text-brand font-medium">
+          <div class="flex items-center gap-3">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Play
+          </div>
+          <span class="w-2 h-2 rounded-full bg-brand"></span>
+        </button>
+
+        <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-md text-brand-muted hover:text-white hover:bg-brand-border/20 transition-all">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+          Puzzles
+        </a>
+
+        <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-md text-brand-muted hover:text-white hover:bg-brand-border/20 transition-all">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+          Learn
+        </a>
+
+        <a href="#" class="flex items-center justify-between px-3 py-2 rounded-md text-brand-muted hover:text-white hover:bg-brand-border/20 transition-all">
+          <div class="flex items-center gap-3">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+            Community
+          </div>
+          <span class="w-1.5 h-1.5 rounded-full bg-orange-500"></span>
+        </a>
+      </nav>
+    </div>
+
+    <!-- Sidebar Bottom -->
+    <div class="space-y-4 pt-4 border-t border-brand-border/40 text-xs text-brand-muted">
+      <div class="space-y-2">
+        <a href="#" class="flex items-center justify-between hover:text-white transition-all">
+          <span>Help & Support</span>
+          <span>&rarr;</span>
+        </a>
+        <div class="flex items-center justify-between">
+          <span>Language</span>
+          <span class="text-brand font-mono">EN</span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span>Sound</span>
+          <span class="text-brand font-mono">ON</span>
+        </div>
+      </div>
+
+      <!-- User Profile -->
+      <div class="pt-2 flex items-center justify-between border-t border-brand-border/40">
+        <div class="flex items-center gap-2">
+          <div class="w-7 h-7 rounded bg-brand-border flex items-center justify-center text-white font-mono text-xs font-bold">
+            LL
+          </div>
+          <span class="text-white font-mono uppercase tracking-wider font-semibold text-xs">LUCIFER</span>
+        </div>
+        <button class="hover:text-white"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg></button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN VIEWPORT -->
+  <main class="flex-1 flex flex-col justify-between overflow-y-auto relative z-10 p-8 md:p-12">
+    
+    <!-- Hero Banner -->
+    <div class="max-w-4xl space-y-8 mt-4">
+      <div class="space-y-2">
+        <h2 class="font-display text-5xl md:text-7xl font-extrabold tracking-tight uppercase leading-none">
+          Master <br/>
+          the <br/>
+          Geometry. <br/>
+          <span class="text-brand glow-effect">Play the <br/> Best</span> <br/>
+          Pattern <br/>
+          Making <br/>
+          Game.
+        </h2>
+        <p class="text-brand-muted text-sm md:text-base pt-4">Select Pattern, Roll the dice and create the pattern.</p>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex items-center gap-4">
+        <button onclick="openPlayModal()" class="bg-brand hover:bg-brand-hover text-black font-bold px-8 py-3.5 rounded-md flex items-center gap-3 transition-all">
+          <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          GET STARTED
+        </button>
+        <button class="bg-brand-surface border border-brand-border hover:border-brand-muted text-white font-medium px-6 py-3.5 rounded-md flex items-center gap-3 transition-all text-sm">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          Tutorial & Rulebook
+        </button>
+      </div>
+
+      <!-- Algorithmic Aesthetics Card -->
+      <div class="mt-16 bg-brand-surface/90 border border-brand-border p-6 rounded-lg max-w-xl space-y-4">
+        <div class="flex items-center gap-2 text-brand text-xs font-mono tracking-widest uppercase">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg>
+          ALGORITHMIC AESTHETICS
+        </div>
+        <h3 class="font-display text-2xl font-bold text-white leading-snug">
+          Designed for mathematicians,<br/>and puzzle purists.
+        </h3>
+        <button class="border border-brand-border hover:border-brand text-brand text-xs font-mono px-4 py-2 rounded flex items-center gap-2 transition-all">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+          Read the Rulebook
+        </button>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="mt-12 pt-6 border-t border-brand-border/40 flex flex-col md:flex-row items-center justify-between text-xs text-brand-muted gap-4">
+      <div class="flex items-center gap-2">
+        <span class="font-display font-bold text-white tracking-widest">CREATOR</span>
+        <span>Creator.com (C) 2026. All rights reserved.</span>
+      </div>
+      <div class="flex items-center gap-6">
+        <a href="#" class="hover:text-white">Support</a>
+        <a href="#" class="hover:text-white">Terms</a>
+        <a href="#" class="hover:text-white">About</a>
+        <a href="#" class="hover:text-white">Team</a>
+        <a href="#" class="hover:text-white">User Agreement</a>
+      </div>
+    </footer>
+  </main>
+
+  <!-- MULTI-STAGE PLAY MODAL FRAMEWORK -->
+  <div id="playModal" class="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 hidden">
+    <div class="bg-brand-surface border border-brand-border rounded-xl w-full max-w-lg p-6 relative shadow-2xl space-y-6">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between border-b border-brand-border pb-4">
+        <h3 id="modalTitle" class="font-display font-bold text-xl text-white tracking-wide">SELECT PLAY MODE</h3>
+        <button onclick="closePlayModal()" class="text-brand-muted hover:text-white">&times;</button>
+      </div>
+
+      <!-- STAGE 1: MODE SELECTION -->
+      <div id="stage-modes" class="space-y-3">
+        <button onclick="selectMode('ai')" class="w-full bg-brand-border/30 hover:bg-brand-border border border-brand-border hover:border-brand/50 p-4 rounded-lg flex items-center justify-between transition-all group">
+          <div class="text-left">
+            <h4 class="font-bold text-white group-hover:text-brand">VS AI</h4>
+            <p class="text-xs text-brand-muted">Challenge basic, self-learning, or advanced bots</p>
+          </div>
+          <span class="text-brand">&rarr;</span>
+        </button>
+
+        <button onclick="selectMode('friend')" class="w-full bg-brand-border/30 hover:bg-brand-border border border-brand-border hover:border-brand/50 p-4 rounded-lg flex items-center justify-between transition-all group">
+          <div class="text-left">
+            <h4 class="font-bold text-white group-hover:text-brand">Play with Friend</h4>
+            <p class="text-xs text-brand-muted">Create a custom room or join via room code</p>
+          </div>
+          <span class="text-brand">&rarr;</span>
+        </button>
+
+        <button onclick="selectMode('global')" class="w-full bg-brand-border/30 hover:bg-brand-border border border-brand-border hover:border-brand/50 p-4 rounded-lg flex items-center justify-between transition-all group">
+          <div class="text-left">
+            <h4 class="font-bold text-white group-hover:text-brand">Global Multiplayer</h4>
+            <p class="text-xs text-brand-muted">Match with active online players worldwide</p>
+          </div>
+          <span class="text-brand">&rarr;</span>
+        </button>
+      </div>
+
+      <!-- STAGE 2A: AI DIFFICULTY SELECTION -->
+      <div id="stage-ai-options" class="space-y-3 hidden">
+        <button onclick="selectAIDifficulty('Basic AI')" class="w-full bg-brand-border/30 hover:bg-brand-border border border-brand-border hover:border-brand p-4 rounded-lg text-left">
+          <h4 class="font-bold text-white">1. Basic AI</h4>
+          <p class="text-xs text-brand-muted">Deterministic rule-following engine</p>
+        </button>
+        <button onclick="selectAIDifficulty('Self Learning AI')" class="w-full bg-brand-border/30 hover:bg-brand-border border border-brand-border hover:border-brand p-4 rounded-lg text-left">
+          <h4 class="font-bold text-white">2. Self Learning AI</h4>
+          <p class="text-xs text-brand-muted">Adapts dynamically to your pattern strategy</p>
+        </button>
+        <button onclick="selectAIDifficulty('Advanced AI')" class="w-full bg-brand-border/30 hover:bg-brand-border border border-brand-border hover:border-brand p-4 rounded-lg text-left">
+          <h4 class="font-bold text-white">3. Advanced AI</h4>
+          <p class="text-xs text-brand-muted">High-depth matrix evaluator engine</p>
+        </button>
+        <button onclick="backToModes()" class="text-xs text-brand-muted hover:text-white pt-2">&larr; Back to modes</button>
+      </div>
+
+      <!-- STAGE 2B: FRIEND OPTIONS (CREATE / JOIN) -->
+      <div id="stage-friend-options" class="space-y-3 hidden">
+        <button onclick="setupFriendRoom('create')" class="w-full bg-brand-border/30 hover:bg-brand-border border border-brand-border hover:border-brand p-4 rounded-lg text-left">
+          <h4 class="font-bold text-white">Create Room</h4>
+          <p class="text-xs text-brand-muted">Get a shareable room code and select pattern rules</p>
+        </button>
+        
+        <div class="bg-brand-border/20 border border-brand-border p-4 rounded-lg space-y-3">
+          <h4 class="font-bold text-white text-sm">Join Room</h4>
+          <div class="flex gap-2">
+            <input id="roomCodeInput" type="text" placeholder="Enter Room Code" class="bg-brand-dark border border-brand-border text-white text-sm rounded px-3 py-2 flex-1 focus:outline-none focus:border-brand font-mono uppercase">
+            <button onclick="joinFriendRoom()" class="bg-brand hover:bg-brand-hover text-black font-bold px-4 py-2 rounded text-sm">Join</button>
+          </div>
+        </div>
+        <button onclick="backToModes()" class="text-xs text-brand-muted hover:text-white pt-2">&larr; Back to modes</button>
+      </div>
+
+      <!-- STAGE 3: PATTERN SELECTION (AI / ROOM CREATOR) -->
+      <div id="stage-pattern-selection" class="space-y-4 hidden">
+        <div class="bg-blue-950/40 border border-blue-500/30 p-3 rounded text-xs text-blue-300">
+          <span>&bull; Side Assigned: <b>Blue Side (First Mover)</b></span>
+        </div>
+
+        <div class="space-y-2">
+          <label class="text-xs text-brand-muted uppercase tracking-wider font-mono">Choose Pattern Type</label>
+          <div class="grid grid-cols-2 gap-3">
+            <button onclick="finalizeMatch('Custom Pattern')" class="bg-brand-border/30 hover:bg-brand-border border border-brand-border hover:border-brand p-4 rounded-lg text-center font-bold text-white">
+              Choose Pattern
+            </button>
+            <button onclick="finalizeMatch('Random Pattern')" class="bg-brand-border/30 hover:bg-brand-border border border-brand-border hover:border-brand p-4 rounded-lg text-center font-bold text-white">
+              Random Pattern
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- STAGE 4: GLOBAL MULTIPLAYER MATCHMAKING -->
+      <div id="stage-global-matchmaking" class="space-y-4 hidden text-center py-6">
+        <div class="inline-block animate-spin rounded-full h-8 w-8 border-2 border-brand border-t-transparent"></div>
+        <p class="text-sm text-white font-mono">Connecting to active global candidates...</p>
+        <p class="text-xs text-brand-muted">Pattern rules and side assignments are allocated automatically.</p>
+        <button onclick="cancelGlobalSearch()" class="mt-4 border border-brand-border px-4 py-2 rounded text-xs text-brand-muted hover:text-white">Cancel</button>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // MATCH STATE TRACKER
+    const matchState = {
+      mode: null,          // 'ai', 'friend', 'global'
+      aiDifficulty: null,  // 'Basic AI', 'Self Learning AI', 'Advanced AI'
+      roomCode: null,      // Code string
+      isHost: false,       // boolean
+      side: null,          // 'Blue' or 'Random'
+      pattern: null        // 'Custom Pattern', 'Random Pattern', 'Auto-Assigned'
+    };
+
+    // MODAL CONTROL FUNCTIONS
+    function openPlayModal() {
+      document.getElementById('playModal').classList.remove('hidden');
+      resetModal();
+    }
+
+    function closePlayModal() {
+      document.getElementById('playModal').classList.add('hidden');
+    }
+
+    function resetModal() {
+      document.getElementById('modalTitle').innerText = 'SELECT PLAY MODE';
+      document.getElementById('stage-modes').classList.remove('hidden');
+      document.getElementById('stage-ai-options').classList.add('hidden');
+      document.getElementById('stage-friend-options').classList.add('hidden');
+      document.getElementById('stage-pattern-selection').classList.add('hidden');
+      document.getElementById('stage-global-matchmaking').classList.add('hidden');
+    }
+
+    function backToModes() {
+      resetModal();
+    }
+
+    // MODE SELECTION HANDLERS
+    function selectMode(mode) {
+      matchState.mode = mode;
+      
+      document.getElementById('stage-modes').classList.add('hidden');
+
+      if (mode === 'ai') {
+        document.getElementById('modalTitle').innerText = 'SELECT AI DIFFICULTY';
+        document.getElementById('stage-ai-options').classList.remove('hidden');
+      } else if (mode === 'friend') {
+        document.getElementById('modalTitle').innerText = 'FRIEND MULTIPLAYER';
+        document.getElementById('stage-friend-options').classList.remove('hidden');
+      } else if (mode === 'global') {
+        startGlobalMatchmaking();
+      }
+    }
+
+    // AI OPTION HANDLER
+    function selectAIDifficulty(difficulty) {
+      matchState.aiDifficulty = difficulty;
+      matchState.side = 'Blue'; // Human is automatically blue and first mover
+      matchState.isHost = true;
+
+      document.getElementById('stage-ai-options').classList.add('hidden');
+      document.getElementById('modalTitle').innerText = 'SELECT PATTERN OPTION';
+      document.getElementById('stage-pattern-selection').classList.remove('hidden');
+    }
+
+    // FRIEND OPTION HANDLERS
+    function setupFriendRoom(action) {
+      if (action === 'create') {
+        matchState.roomCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+        matchState.isHost = true;
+        matchState.side = 'Blue'; // Room creator gets blue side
+
+        document.getElementById('stage-friend-options').classList.add('hidden');
+        document.getElementById('modalTitle').innerText = `ROOM CODE: ${matchState.roomCode}`;
+        document.getElementById('stage-pattern-selection').classList.remove('hidden');
+      }
+    }
+
+    function joinFriendRoom() {
+      const code = document.getElementById('roomCodeInput').value.trim();
+      if (!code) {
+        alert('Please enter a room code');
+        return;
+      }
+      matchState.roomCode = code.toUpperCase();
+      matchState.isHost = false;
+      matchState.side = 'Red'; // Joining player gets second side
+      matchState.pattern = 'Host Assigned';
+
+      alert(`Joined Room: ${matchState.roomCode}. Waiting for host to launch matrix...`);
+      closePlayModal();
+    }
+
+    // GLOBAL MULTIPLAYER MATCHMAKING HANDLER
+    function startGlobalMatchmaking() {
+      document.getElementById('modalTitle').innerText = 'GLOBAL MATCHMAKING';
+      document.getElementById('stage-global-matchmaking').classList.remove('hidden');
+
+      // Simulate matchmaking completion after 3 seconds
+      setTimeout(() => {
+        if (!document.getElementById('stage-global-matchmaking').classList.contains('hidden')) {
+          matchState.side = Math.random() > 0.5 ? 'Blue' : 'Red';
+          matchState.pattern = 'Auto-Assigned';
+          alert(`Match Found! Assigned Side: ${matchState.side}. Pattern set automatically.`);
+          closePlayModal();
+        }
+      }, 3000);
+    }
+
+    function cancelGlobalSearch() {
+      resetModal();
+    }
+
+    // FINAL MATCH LAUNCH
+    function finalizeMatch(patternChoice) {
+      matchState.pattern = patternChoice;
+      alert(`Launching Match!\n\nMode: ${matchState.mode.toUpperCase()}\nSide: ${matchState.side} (First Mover)\nPattern Selection: ${matchState.pattern}`);
+      closePlayModal();
+    }
+  </script>
+</body>
+</html>

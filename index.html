@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CREATOR</title>
+
+  <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Montserrat:wght@300;400;600&family=Material+Icons&display=swap" rel="stylesheet"/>
+
+  <link rel="stylesheet" href="fend/style.css"/>
+  <script type="module" src="fend/ui.js"></script>
+</head>
+
+<body class="bg-[#0A0A0C] text-gray-100 font-sans min-h-screen">
+
+<div class="bg-blur primary"></div>
+<div class="bg-blur accent"></div>
+
+<main class="relative z-10 min-h-screen flex flex-col items-center justify-between py-12 px-4">
+
+  <header class="text-center space-y-3">
+    <h1 class="font-display text-7xl md:text-9xl text-primary tracking-widest glow">
+      CREATOR
+    </h1>
+    <p class="italic text-accent/80 tracking-wide">
+      A pattern of mind. A war of memory.
+    </p>
+  </header>
+
+  <section class="glass-panel max-w-4xl w-full p-8 grid grid-cols-1 md:grid-cols-2 gap-6 mt-10">
+
+    <div class="md:col-span-2">
+      <label class="label">Play As</label>
+      <select id="roleSelect" class="select">
+        <option value="C">Creator</option>
+        <option value="D">Destroyer</option>
+      </select>
+    </div>
+
+    <div>
+      <label class="label">Game Mode</label>
+      <select id="modeSelect" class="select">
+        <option value="LOCAL">Local (Hotseat)</option>
+     
+      </select>
+    </div>
+
+    <div>
+      <label class="label">Difficulty</label>
+      <select id="difficultySelect" class="select" disabled>
+        <option value="NORMAL">Normal</option>
+      </select>
+    </div>
+
+    <div class="md:col-span-2">
+      <label class="label">Pattern Category</label>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <button class="pattern-cat-btn" data-category="alphabets">Alphabets</button>
+        <button class="pattern-cat-btn" data-category="numbers">Numbers</button>
+        <button class="pattern-cat-btn" data-category="symbols">Characters</button>
+        <button class="pattern-cat-btn" data-category="shapes">Shapes</button>
+      </div>
+    </div>
+
+    <div id="patternPicker" class="md:col-span-2 hidden">
+      <label class="label">Select Pattern</label>
+      <select id="patternSelect" class="select"></select>
+    </div>
+
+    <div class="md:col-span-2">
+      <button id="startBtn" class="start-btn" disabled>
+        Start Game
+        <span class="material-icons">play_arrow</span>
+      </button>
+    </div>
+
+  </section>
+
+  <footer class="text-xs tracking-[0.3em] uppercase text-gray-500 mt-12">
+    © 2026 — Dibyanshu | Lucifer - CREATOR GAME
+  </footer>
+
+</main>
+</body>
+</html>
