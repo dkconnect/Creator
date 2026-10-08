@@ -136,6 +136,9 @@ def test_blue_can_roll_over_real_tcp():
             Protocol.join_room(room_code)
         )
 
+        blue.request(Protocol.set_ready(True))
+        red.request(Protocol.set_ready(True))
+
         response = blue.request(
             Protocol.roll()
         )
@@ -180,6 +183,9 @@ def test_red_cannot_roll_during_blue_turn_over_tcp():
         red.request(
             Protocol.join_room(room_code)
         )
+
+        blue.request(Protocol.set_ready(True))
+        red.request(Protocol.set_ready(True))
 
         response = red.request(
             Protocol.roll()

@@ -48,6 +48,8 @@ running = True
 
 ai_turn_delay_ms = 1500
 last_ai_step_time = 0
+last_lobby_poll = 0
+lobby_poll_interval_ms = 500
 
 
 def start_game():
@@ -368,6 +370,13 @@ while running:
                                     multiplayer.disconnect()
                                     multiplayer = None
 
+                    elif btn_key == "TOGGLE_READY":
+                        if multiplayer is not None and multiplayer.lobby_state:
+                            team_info = multiplayer.lobby_state["players"][multiplayer.team]
+                            response = multiplayer.set_ready(not team_info["ready"])
+                            if response and response.get("type") == "LOBBY_STATE":
+                                menu_state.lobby_data = multiplayer.lobby_state
+
                     elif btn_key == "LAUNCH_GAME":
 
                         if (
@@ -571,6 +580,23 @@ while running:
     # -----------------------------------------
     # RENDERING
     # -----------------------------------------
+
+    if (
+        menu_state.current_state == MenuState.LOBBY_WAITING
+        and menu_state.selected_mode == "ROOM"
+        and multiplayer is not None
+        and current_time - last_lobby_poll >= lobby_poll_interval_ms
+    ):
+        last_lobby_poll = current_time
+        try:
+            response = multiplayer.get_lobby()
+            if response and response.get("type") == "LOBBY_STATE":
+                menu_state.lobby_data = multiplayer.lobby_state
+                menu_state.lobby_team = multiplayer.team
+                if multiplayer.lobby_state.get("started"):
+                    start_network_game()
+        except (OSError, ConnectionError, TimeoutError):
+            pass
 
     if menu_state.current_state != MenuState.IN_GAME:
 

@@ -180,6 +180,9 @@ def test_blue_roll_routes_into_correct_session():
         Protocol.join_room(room_code)
     )
 
+    router.handle_message("client-a", Protocol.set_ready(True))
+    router.handle_message("client-b", Protocol.set_ready(True))
+
     response = router.handle_message(
         "client-a",
         Protocol.roll()
@@ -208,6 +211,9 @@ def test_red_cannot_roll_on_blue_turn():
         "client-b",
         Protocol.join_room(room_code)
     )
+
+    router.handle_message("client-a", Protocol.set_ready(True))
+    router.handle_message("client-b", Protocol.set_ready(True))
 
     response = router.handle_message(
         "client-b",

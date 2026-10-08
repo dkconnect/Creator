@@ -19,6 +19,8 @@ class MenuState:
         self.selected_difficulty = None    # "EASY", "LEARNING", "ADVANCED"
         self.selected_pattern = None       # filename string, e.g. "A.json"
         self.room_action = None            # "CREATE", "JOIN"
+        self.lobby_data = None
+        self.lobby_team = None
         self.room_code_input = ""          # for Join Room
         self.generated_room_code = "849201"  # mock room code for local lobby
 
@@ -37,4 +39,6 @@ class MenuState:
         self.selected_mode = None
         self.selected_difficulty = None
         self.room_action = None
+        self.lobby_data = None
+        self.lobby_team = None
         self.room_code_input = ""

@@ -268,6 +268,9 @@ def test_room_manager_routes_blue_roll():
         "client-b"
     )
 
+    manager.handle_client_message(room_code, "client-a", Protocol.set_ready(True))
+    manager.handle_client_message(room_code, "client-b", Protocol.set_ready(True))
+
     response = manager.handle_client_message(
         room_code,
         "client-a",
@@ -296,6 +299,9 @@ def test_room_manager_blocks_red_roll_on_blue_turn():
         room_code,
         "client-b"
     )
+
+    manager.handle_client_message(room_code, "client-a", Protocol.set_ready(True))
+    manager.handle_client_message(room_code, "client-b", Protocol.set_ready(True))
 
     response = manager.handle_client_message(
         room_code,

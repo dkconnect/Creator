@@ -18,6 +18,7 @@ class MultiplayerClient:
         self.team = None
 
         self.game_state = ClientGameState()
+        self.lobby_state = None
 
     def connect(self):
         return self.client.connect()
@@ -27,6 +28,7 @@ class MultiplayerClient:
 
         self.room_code = None
         self.team = None
+        self.lobby_state = None
 
     def create_room(self):
         response = self.client.request(
@@ -47,6 +49,18 @@ class MultiplayerClient:
         return self._handle_room_response(
             response
         )
+
+    def get_lobby(self):
+        response = self.client.request(Protocol.get_lobby())
+        if response and response.get("type") == Protocol.LOBBY_STATE:
+            self.lobby_state = response["data"]
+        return response
+
+    def set_ready(self, ready):
+        response = self.client.request(Protocol.set_ready(ready))
+        if response and response.get("type") == Protocol.LOBBY_STATE:
+            self.lobby_state = response["data"]
+        return response
 
     def get_state(self):
         response = self.client.request(

@@ -155,7 +155,55 @@ class MenuRenderer:
         self.buttons["BACK"] = back_rect
         self._draw_button(back_rect, "BACK", color=(60, 60, 70))
 
+    def _draw_friend_lobby(self):
+        state = self.state
+        info = getattr(state, "lobby_data", None) or {}
+        players = info.get("players", {})
+        width = self.screen.get_width()
+        center = width // 2
+
+        title = self.header_font.render("FRIEND ROOM", True, (235, 240, 250))
+        self.screen.blit(title, title.get_rect(center=(center, 175)))
+        code = state.room_code_input or "------"
+        label = self.small_font.render("SHARE THIS ROOM CODE", True, (160, 170, 190))
+        self.screen.blit(label, label.get_rect(center=(center, 235)))
+        code_surface = self.title_font.render(code, True, (110, 190, 255))
+        self.screen.blit(code_surface, code_surface.get_rect(center=(center, 290)))
+
+        for index, team in enumerate(("BLUE", "RED")):
+            x = center - 320 + index * 330
+            rect = pygame.Rect(x, 365, 310, 145)
+            pygame.draw.rect(self.screen, (32, 38, 51), rect, border_radius=12)
+            pygame.draw.rect(self.screen, (75, 95, 125), rect, 2, border_radius=12)
+            color = (90, 160, 255) if team == "BLUE" else (245, 105, 115)
+            heading = self.header_font.render(team, True, color)
+            self.screen.blit(heading, (x + 20, 383))
+            member = players.get(team, {})
+            connected = member.get("connected", False)
+            ready = member.get("ready", False)
+            status = "READY" if ready else ("NOT READY" if connected else "WAITING FOR PLAYER")
+            status_color = (90, 220, 145) if ready else (190, 195, 205)
+            text = self.font.render(status, True, status_color)
+            self.screen.blit(text, (x + 20, 450))
+
+        own = players.get(getattr(state, "lobby_team", None), {})
+        ready = own.get("ready", False)
+        rect = pygame.Rect(center - 170, 560, 340, 65)
+        self.buttons["TOGGLE_READY"] = rect
+        self._draw_button(rect, "CANCEL READY" if ready else "I'M READY",
+                          is_selected=True, active_color=(40, 160, 100))
+        message = "Both players ready: starting match" if info.get("started") else "Match starts automatically when both players are ready"
+        hint = self.small_font.render(message, True, (170, 180, 200))
+        self.screen.blit(hint, hint.get_rect(center=(center, 665)))
+        back_rect = pygame.Rect(40, 40, 110, 45)
+        self.buttons["BACK"] = back_rect
+        self._draw_button(back_rect, "CANCEL", color=(60, 60, 70))
+
     def _draw_lobby_waiting(self):
+        if self.state.selected_mode == "ROOM":
+            self._draw_friend_lobby()
+            return
+
         if self.state.selected_mode == "ONLINE":
             title = "MATCHMAKING"
             status = "Finding opponent in lobby..."

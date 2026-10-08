@@ -129,6 +129,9 @@ def test_blue_client_can_roll_on_blue_turn():
     session.add_client("client-a")
     session.add_client("client-b")
 
+    session.handle_client_message("client-a", Protocol.set_ready(True))
+    session.handle_client_message("client-b", Protocol.set_ready(True))
+
     response = session.handle_client_message(
         "client-a",
         Protocol.roll()
@@ -143,6 +146,9 @@ def test_red_client_cannot_roll_on_blue_turn():
 
     session.add_client("client-a")
     session.add_client("client-b")
+
+    session.handle_client_message("client-a", Protocol.set_ready(True))
+    session.handle_client_message("client-b", Protocol.set_ready(True))
 
     response = session.handle_client_message(
         "client-b",

@@ -8,6 +8,9 @@ class Protocol:
     ROOM_JOINED = "ROOM_JOINED"
     GAME_STATE = "GAME_STATE"
     GET_STATE = "GET_STATE"
+    GET_LOBBY = "GET_LOBBY"
+    SET_READY = "SET_READY"
+    LOBBY_STATE = "LOBBY_STATE"
     ERROR = "ERROR"
 
     @classmethod
@@ -76,6 +79,18 @@ class Protocol:
         }
 
     @classmethod
+    def get_lobby(cls):
+        return {"version": cls.VERSION, "type": cls.GET_LOBBY, "data": {}}
+
+    @classmethod
+    def set_ready(cls, ready):
+        return {"version": cls.VERSION, "type": cls.SET_READY, "data": {"ready": ready}}
+
+    @classmethod
+    def lobby_state(cls, state):
+        return {"version": cls.VERSION, "type": cls.LOBBY_STATE, "data": state}
+
+    @classmethod
     def error(cls, message):
         return {
             "version": cls.VERSION,
@@ -101,6 +116,9 @@ class Protocol:
             cls.ROOM_JOINED,
             cls.GAME_STATE,
             cls.GET_STATE,
+            cls.GET_LOBBY,
+            cls.SET_READY,
+            cls.LOBBY_STATE,
             cls.ERROR,
         ):
             return False
