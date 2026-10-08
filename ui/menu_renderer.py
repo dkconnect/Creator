@@ -16,6 +16,26 @@ class MenuRenderer:
 
         # Dynamic interactive button rects
         self.buttons = {}
+        self._render_scale = 1.0
+        self._font_cache = {}
+
+    def set_display_surface(self, surface, scale):
+        """Use physical-resolution menu surface, keeping virtual click rects."""
+        self.screen = surface
+        self._render_scale = scale
+        sizes = (("title_font", 48, True), ("header_font", 32, True),
+                 ("font", 24, False), ("small_font", 18, False))
+        for attr, points, bold in sizes:
+            px = max(9, round(points * scale))
+            key = (px, bold)
+            if key not in self._font_cache:
+                self._font_cache[key] = pygame.font.SysFont("arial", px, bold=bold)
+            setattr(self, attr, self._font_cache[key])
+
+    def _mouse_on_surface(self):
+        vx, vy = active_mouse_pos()
+        return (round(vx * self.screen.get_width() / 1200),
+                round(vy * self.screen.get_height() / 900))
 
     def _draw_button(self, rect, text, is_selected=False, is_active=True, color=(50, 50, 60), active_color=(70, 130, 240)):
         bg_color = active_color if is_selected else color
@@ -54,6 +74,13 @@ class MenuRenderer:
             self._draw_lobby_waiting()
 
         self._draw_status_and_help()
+        # Event coordinates are virtual; convert display-space hitboxes back.
+        sx = self.screen.get_width() / 1200
+        sy = self.screen.get_height() / 900
+        for key, rect in list(self.buttons.items()):
+            self.buttons[key] = pygame.Rect(
+                round(rect.x / sx), round(rect.y / sy),
+                max(1, round(rect.width / sx)), max(1, round(rect.height / sy)))
 
     def _draw_mode_select(self):
         """Premium launch screen; preserve the original MODE_* hit targets."""
@@ -104,7 +131,7 @@ class MenuRenderer:
             ('FRIEND ROOM', 'MULTIPLAYER  /  PRIVATE ROOM', 'Create a room or join with a code', True),
             ('ONLINE', 'GLOBAL  /  MATCHMAKING', 'Coming in a future update', False),
         )
-        mouse = active_mouse_pos()
+        mouse = self._mouse_on_surface()
         for index, (key, title, desc, active) in enumerate(modes):
             rect = R(650, 252+index*142, 452, 116)
             self.buttons[f'MODE_{key}'] = rect
@@ -157,7 +184,7 @@ class MenuRenderer:
 
     def _card(self, rect, heading, subtitle, accent=(92, 184, 245),
               selected=False, enabled=True):
-        hovered = enabled and rect.collidepoint(active_mouse_pos())
+        hovered = enabled and rect.collidepoint(self._mouse_on_surface())
         fill = (31, 65, 91) if hovered else ((31, 59, 76) if selected else (27, 46, 65))
         if not enabled:
             fill = (24, 35, 47)

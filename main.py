@@ -1,3 +1,15 @@
+# Set DPI awareness before SDL/Pygame creates a window on Windows.
+import sys
+if sys.platform == "win32":
+    try:
+        import ctypes
+        ctypes.windll.shcore.SetProcessDpiAwareness(2)  # per-monitor DPI aware
+    except (AttributeError, OSError, ValueError):
+        try:
+            ctypes.windll.user32.SetProcessDPIAware()
+        except (AttributeError, OSError):
+            pass
+
 import pygame
 import json
 
@@ -29,13 +41,16 @@ WIDTH, HEIGHT = 1200, 900
 # decorated Windows window can resize independently without clipping the board.
 from ui.viewport import Viewport
 from ui.native_scene import draw_native_scene
+from ui.native_overlays import draw_multiplayer_hud, draw_match_result
 viewport = Viewport(WIDTH, HEIGHT)
 window = pygame.display.set_mode(viewport.initial_size(), pygame.RESIZABLE)
 screen = pygame.Surface((WIDTH, HEIGHT)).convert()
 pygame.display.set_caption("Creator")
 
 menu_state = MenuState()
-menu_renderer = MenuRenderer(screen, menu_state)
+# Menu is rasterized directly at its final pixel size, not scaled as a bitmap.
+menu_surface = pygame.Surface((WIDTH, HEIGHT)).convert()
+menu_renderer = MenuRenderer(menu_surface, menu_state)
 
 game = None
 renderer = None
@@ -681,8 +696,15 @@ while running:
             pass
 
     if menu_state.current_state != MenuState.IN_GAME:
-
+        viewport.resize(window.get_size())
+        menu_w = max(1, round(WIDTH * viewport.scale))
+        menu_h = max(1, round(HEIGHT * viewport.scale))
+        if menu_surface.get_size() != (menu_w, menu_h):
+            menu_surface = pygame.Surface((menu_w, menu_h)).convert()
+        menu_renderer.set_display_surface(menu_surface, viewport.scale)
         menu_renderer.draw()
+        window.fill((8, 16, 26))
+        window.blit(menu_surface, viewport.offset)
 
     else:
 
@@ -723,13 +745,23 @@ while running:
 
             renderer.draw()
 
-    viewport.present(screen, window)
-    # Render the board primitives at physical window resolution after the
-    # legacy UI has been scaled. Input remains in virtual coordinates.
     if menu_state.current_state == MenuState.IN_GAME:
+        viewport.resize(window.get_size())
         active_renderer = network_renderer if network_game is not None else renderer
-        if active_renderer is not None:
+        active_game = network_game if network_game is not None else game
+        window.fill((8, 16, 26))
+        if active_game is not None and not active_game.game_over:
             draw_native_scene(window, viewport, active_renderer)
+            if network_game is not None:
+                draw_multiplayer_hud(window, viewport, multiplayer, network_game, network_sync)
+        else:
+            # Draw the finished board underneath the result, then render the
+            # result panel and typography directly at physical resolution.
+            # The legacy result overlay is fully covered by the new overlay.
+            viewport.present(screen, window)
+            if active_game is not None:
+                draw_match_result(window, viewport, active_game, active_renderer,
+                                  multiplayer if network_game is not None else None)
     pygame.display.flip()
     clock.tick(60)
 
