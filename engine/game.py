@@ -69,16 +69,6 @@ class Game:
                 if self.board.grid[r][c] is pawn:
                     self.board.grid[r][c] = None
 
-        if player.captures_suffered > 10:
-            pawn.active = False
-            pawn.row = -1
-            pawn.col = -1
-
-            if pawn in player.reserve:
-                player.reserve.remove(pawn)
-
-            return False
-
         if pawn.team == "BLUE":
             spawn_rows = range(2)
         else:
@@ -105,14 +95,6 @@ class Game:
 
     def process_reserve(self, player):
         if not player.reserve:
-            return False
-
-        if player.respawns >= 10:
-            for pawn in player.reserve:
-                pawn.active = False
-                pawn.row = -1
-                pawn.col = -1
-            player.reserve.clear()
             return False
 
         if player.team == "BLUE":

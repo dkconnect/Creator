@@ -93,7 +93,7 @@ def test_first_ten_captures_respawn():
     assert game.red.respawns == 10
 
 
-def test_eleventh_capture_is_permanent():
+def test_eleventh_capture_respawns():
     game = Game()
 
     for i in range(10):
@@ -108,10 +108,10 @@ def test_eleventh_capture_is_permanent():
 
     result = game.respawn_pawn(eleventh)
 
-    assert result is False
-    assert eleventh.active is False
+    assert result is True
+    assert eleventh.active is True
     assert game.red.captures_suffered == 11
-    assert game.red.respawns == 10
+    assert game.red.respawns == 11
 
 
 def test_respawn_counter_is_shared_by_team():
@@ -146,12 +146,11 @@ def test_eleventh_capture_can_be_any_pawn():
 
     result = game.respawn_pawn(eleventh)
 
-    assert result is False
-    assert eleventh.active is False
+    assert result is True
+    assert eleventh.active is True
 
-    # The 11th capture is a permanent removal, not a respawn, so the
-    # respawn count stays at 10 ("Only successful respawns count").
-    assert game.red.respawns == 10
+    # The 11th capture also respawns successfully.
+    assert game.red.respawns == 11
 
 
 def test_active_pawn_can_be_captured_and_respawned_again():
