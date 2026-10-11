@@ -1,0 +1,195 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0c1622">
+  <meta name="description" content="Creator — a tactical formation board game.">
+  <title>CREATOR — Tactical Board</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="/app.js" defer></script>
+</head>
+
+<body>
+  <main class="shell">
+
+    <!-- SHARED HEADER -->
+    <header class="top">
+      <div class="header-left">
+        <a
+          class="rules-button"
+          href="https://github.com/"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Open Creator rulebook link"
+        >
+          RULEBOOK
+        </a>
+
+        <div class="brand">
+          CREATOR <span>/ TACTICAL BOARD</span>
+        </div>
+      </div>
+
+      <div class="rule">
+        100% FORMATION / NO TURN LIMIT
+      </div>
+    </header>
+
+    <!-- HOME SCREEN -->
+    <section id="home" class="home-screen">
+
+      <div class="welcome">
+        <div class="eyebrow">TACTICAL FORMATION GAME</div>
+
+        <h1>Build the impossible formation.</h1>
+
+        <p>
+          Choose your opponent and victory pattern.
+          Your match starts on the next screen.
+        </p>
+
+        <div class="home-features">
+          <span>16 × 16 BOARD</span>
+          <span>53 PATTERNS</span>
+          <span>3 AI LEVELS</span>
+        </div>
+      </div>
+
+      <div class="panel setup">
+        <div class="eyebrow">CREATOR / NEW GAME</div>
+        <h2>SET UP YOUR MATCH</h2>
+
+        <label for="mode">Game mode</label>
+        <select id="mode">
+          <option value="human">Human vs Human</option>
+          <option value="basic">Human vs Basic AI</option>
+          <option value="learning">Human vs Learning AI</option>
+          <option value="advanced">Human vs Advanced AI</option>
+        </select>
+
+        <label for="patterns">Victory pattern</label>
+        <select id="patterns"></select>
+
+        <p class="note">
+          BLUE moves first. Against AI, you play BLUE
+          and the AI plays RED.
+        </p>
+
+        <button id="new" class="primary" type="button">
+          START GAME
+        </button>
+
+        <p id="setup-status" class="feedback" role="status">
+          Loading patterns…
+        </p>
+      </div>
+
+    </section>
+
+    <!-- GAME SCREEN -->
+    <section id="game" class="game-screen" hidden>
+
+      <div class="layout">
+
+        <section class="board-wrap" aria-label="Game board">
+
+          <div class="board-frame">
+            <div
+              id="board"
+              role="grid"
+              aria-label="16 by 16 Creator board"
+            ></div>
+          </div>
+
+          <div class="board-footer">
+            <span
+              id="status"
+              role="status"
+              aria-live="polite"
+            ></span>
+          </div>
+
+        </section>
+
+        <aside class="rail">
+
+          <!-- MATCH CONTROL -->
+          <section class="panel control">
+            <div class="eyebrow">MATCH CONTROL</div>
+
+            <h2 id="turn">READY TO PLAY</h2>
+
+            <div class="separator"></div>
+
+            <div class="stat-grid">
+              <div>
+                <div class="eyebrow">DICE RESULT</div>
+                <div id="dice" class="value gold">—</div>
+              </div>
+
+              <div>
+                <div class="eyebrow">VICTORY PATTERN</div>
+                <div id="pattern" class="value">—</div>
+              </div>
+            </div>
+
+            <button
+              id="roll"
+              class="primary"
+              type="button"
+              disabled
+            >
+              ROLL DICE
+            </button>
+          </section>
+
+          <!-- PAWN LOSSES -->
+          <section class="panel losses">
+            <div class="eyebrow">PAWN LOSSES</div>
+
+            <div id="captures" class="capture-grid">
+              <span class="blue">BLUE 0</span>
+              <span class="red">RED 0</span>
+            </div>
+          </section>
+
+          <!-- MATCH OPTIONS -->
+          <section class="panel actions">
+            <div class="eyebrow">MATCH OPTIONS</div>
+
+            <button
+              id="back"
+              class="secondary"
+              type="button"
+            >
+              NEW MATCH / CHANGE PATTERN
+            </button>
+
+            <p class="note">
+              Starting another match replaces the
+              current game.
+            </p>
+          </section>
+
+        </aside>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- SHARED FOOTER -->
+  <footer class="creator-footer">
+    Created by
+    <a
+      href="https://github.com/dkconnect"
+      target="_blank"
+      rel="noopener noreferrer"
+    >Dibyanshu</a>
+    ❤️
+  </footer>
+
+</body>
+</html>
