@@ -74,6 +74,7 @@ class Renderer:
             valid_moves = self.game.get_valid_moves()
         except (AttributeError, ValueError):
             valid_moves = []
+            
         for r, c in valid_moves:
             cx = self.BOARD_X + c * self.CELL_SIZE + self.CELL_SIZE // 2
             cy = self.BOARD_Y + r * self.CELL_SIZE + self.CELL_SIZE // 2
