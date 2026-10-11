@@ -1,6 +1,7 @@
 from engine.game import Game
 from engine.ai.basic_ai import BasicAI
 from engine.pattern import Pattern
+from engine import victory
 
 
 def make_test_pattern(grid):
@@ -39,10 +40,9 @@ def test_basic_ai_prioritizes_landing_on_pattern():
     game.pattern = make_test_pattern([[1, 0], [0, 0]])
     ai = BasicAI(team="RED")
 
-    offset = (game.board.size - game.pattern.size) // 2  # (7, 7)
-    target_pos = (offset, offset)  # (7, 7)
+    target_pos = victory.target_cells(game, "RED")[0]  # mirrored RED target (8, 7)
 
-    # Place a Red pawn at (10, 7) so a roll of 3 can land directly on (7, 7)
+    # Place a Red pawn at (10, 7) so flexible movement can land on (8, 7)
     pawn = game.red.pawns[0]
     game.board.grid[pawn.row][pawn.col] = None
     pawn.row, pawn.col = 10, 7
@@ -84,11 +84,10 @@ def test_basic_ai_prioritizes_capturing_opponent():
 def test_basic_ai_prefers_not_to_leave_pattern_cell():
     """AI should avoid moving a piece off a pattern cell when other options exist."""
     game = Game()
-    game.pattern = make_test_pattern([[1, 0], [0, 0]])
+    game.pattern = make_test_pattern([[1, 1], [0, 0]])
     ai = BasicAI(team="RED")
 
-    offset = (game.board.size - game.pattern.size) // 2
-    pattern_cell = (game.board.size - 1 - offset, offset)  # RED mirrored target (8, 7)
+    pattern_cell = victory.target_cells(game, "RED")[0]  # common centered target
 
     # Deactivate all red pawns first
     for p in game.red.pawns:
@@ -105,7 +104,7 @@ def test_basic_ai_prefers_not_to_leave_pattern_cell():
     # Put another Red pawn that can move closer with roll 3
     far_pawn = game.red.pawns[1]
     far_pawn.active = True
-    far_pawn.row, far_pawn.col = 12, 7
+    far_pawn.row, far_pawn.col = 10, 8
     game.board.place_pawn(far_pawn)
 
     game.dice.value = 3
@@ -114,6 +113,6 @@ def test_basic_ai_prefers_not_to_leave_pattern_cell():
     assert action is not None
     chosen_pawn, row, col = action
 
-    # Should not choose to move the piece that is already on the pattern
-    # (unless it stays on pattern, which it can't with this setup)
+    # The second pawn can complete the formation without disturbing the first.
     assert chosen_pawn is far_pawn
+    assert (row, col) == victory.target_cells(game, "RED")[1]

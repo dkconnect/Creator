@@ -58,9 +58,9 @@ def test_victory_false_when_a_required_cell_is_empty():
     game.pattern = make_pattern(SIMPLE_GRID)
     fill_pattern_for_team(game, "BLUE")
     offset = centered_offset(game)
-    # With 4 cells, 3 occupied is a win; 2 occupied is not.
+    # With 4 cells, all 4 must be occupied.
     game.board.grid[offset][offset] = None
-    assert victory.check_victory(game, game.blue) is True
+    assert victory.check_victory(game, game.blue) is False
     game.board.grid[offset][offset + 1] = None
     assert victory.check_victory(game, game.blue) is False
 
@@ -69,11 +69,11 @@ def test_victory_false_when_a_required_cell_belongs_to_opponent():
     game.pattern = make_pattern(SIMPLE_GRID)
     fill_pattern_for_team(game, "BLUE")
     offset = centered_offset(game)
-    # An opponent on one of four cells leaves exactly 75% for BLUE.
+    # An opponent on any required square blocks full formation.
     game.board.grid[offset][offset] = Pawn(
         id=8000, team="RED", row=offset, col=offset
     )
-    assert victory.check_victory(game, game.blue) is True
+    assert victory.check_victory(game, game.blue) is False
     game.board.grid[offset][offset + 1] = Pawn(
         id=8001, team="RED", row=offset, col=offset + 1
     )

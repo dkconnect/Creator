@@ -55,7 +55,7 @@ def test_full_pattern_wins_for_its_team_only(path, team):
 
 @pytest.mark.parametrize("path", FILES, ids=lambda p: p.stem)
 @pytest.mark.parametrize("team", ["BLUE", "RED"])
-def test_75_percent_boundary(path, team):
+def test_full_formation_boundary(path, team):
     game, cells = _build(path, team)
     needed = required_count(game)
     assert needed >= 1
@@ -69,7 +69,7 @@ def test_75_percent_boundary(path, team):
 
 @pytest.mark.parametrize("path", FILES, ids=lambda p: p.stem)
 @pytest.mark.parametrize("team", ["BLUE", "RED"])
-def test_enemy_blocks_only_its_own_target(path, team):
+def test_enemy_prevents_full_formation(path, team):
     game, cells = _build(path, team)
     needed = required_count(game)
     for r, c in cells[needed:]:
@@ -78,7 +78,7 @@ def test_enemy_blocks_only_its_own_target(path, team):
     enemy = "RED" if team == "BLUE" else "BLUE"
     game.board.place_pawn(Pawn(id=99, team=enemy, row=r, col=c))
     assert not check_victory(game, SimpleNamespace(team=team))
-    assert set(target_cells(game, "RED")) == {(15-r, c) for r, c in target_cells(game, "BLUE")}
+    assert set(target_cells(game, "RED")) == set(target_cells(game, "BLUE"))
 
 
 @pytest.mark.parametrize("path", FILES, ids=lambda p: p.stem)

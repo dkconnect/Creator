@@ -51,7 +51,7 @@ class Renderer:
         pygame.draw.rect(self.screen, self.PANEL, board_rect, border_radius=10)
         pygame.draw.rect(self.screen, self.EDGE, board_rect, 2, border_radius=10)
         self._label('CREATOR   /   TACTICAL BOARD', 33, 31, self.font)
-        self._label('75% FORMATION / 400-TURN LIMIT', 470, 38, self.tiny, self.MUTED)
+        self._label('100% FORMATION / NO TURN LIMIT', 470, 38, self.tiny, self.MUTED)
 
         # Board cells and center victory-pattern target.
         from engine.victory import target_cells
@@ -106,7 +106,7 @@ class Renderer:
         pygame.draw.line(self.screen, self.EDGE, (849, 182), (1162, 182), 1)
         dice = self.game.dice.value
         self._stat('DICE RESULT', '—' if dice is None else str(dice), 199, self.GOLD)
-        self._stat('VICTORY PATTERN', str(pattern.name or '—'), 267)
+        self._stat('VICTORY PATTERN', str(getattr(self.game.pattern, 'name', None) or '—'), 267)
 
         hover = self.dice_button.collidepoint(active_mouse_pos())
         pygame.draw.rect(self.screen, (49, 125, 182) if hover else (38, 100, 153),

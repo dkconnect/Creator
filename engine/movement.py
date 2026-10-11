@@ -1,10 +1,4 @@
 class Movement:
-    """Eight-direction movement: choose 1..die.value squares per turn.
-
-    Pieces may jump over occupied intermediate squares (existing rule).
-    A friendly piece blocks only the landing square; an enemy can be captured.
-    """
-
     DIRECTIONS = [
         (-1, 0), (1, 0), (0, -1), (0, 1),
         (-1, -1), (-1, 1), (1, -1), (1, 1),

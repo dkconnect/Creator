@@ -301,14 +301,6 @@ class Game:
         if self.game_over:
             return
         self.turn_count += 1
-        if self.turn_count >= victory.TURN_LIMIT:
-            self.winner = victory.endgame_result(self)
-            self.game_over = True
-            self.result_reason = "endgame" if self.winner else "draw"
-            self.selected_pawn = None
-            self.dice.value = None
-            self.turn_phase = None
-            return
         self.current_player = self.red if self.current_player == self.blue else self.blue
         self.selected_pawn = None
         self.dice.value = None

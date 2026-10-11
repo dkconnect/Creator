@@ -44,7 +44,7 @@ def draw_native_hud(window, viewport, renderer):
     # Redraw all typography on the title bar, avoiding scaled-font ghosts.
     pygame.draw.rect(window, renderer.BG, R(23, 13, 792, 57))
     label("CREATOR   /   TACTICAL BOARD", 33, 31, 23, bold=True)
-    label("75% FORMATION / 400-TURN LIMIT", 470, 38, 14,
+    label("FULL FORMATION / NO TURN LIMIT", 470, 38, 14,
           renderer.MUTED, True)
 
     panel(829, 86, 355, 344, 14)
@@ -62,10 +62,10 @@ def draw_native_hud(window, viewport, renderer):
     label("VICTORY PATTERN", 862, 267, 14, renderer.MUTED, True)
     label(str(game.pattern.name or "—"), 862, 291, 23, bold=True)
 
-    from engine.victory import progress, required_count, TURN_LIMIT
+    from engine.victory import progress, required_count
     blue, _ = progress(game, "BLUE")
     red, _ = progress(game, "RED")
-    label(f"B {blue} / R {red}  ·  NEED {required_count(game)}  ·  TURN {getattr(game, 'turn_count', 0)}/{TURN_LIMIT}",
+    label(f"B {blue} / R {red}  ·  NEED {required_count(game)}  ·  TURN {getattr(game, 'turn_count', 0)}",
           850, 315, 13, renderer.MUTED, True)
 
     button = renderer.dice_button
