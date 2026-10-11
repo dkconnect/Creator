@@ -2,7 +2,7 @@
 
 # CREATOR
 
-**A tactical board game where the goal is not to take every piece — it is to build a formation.**
+**A tactical board game you can never complete**
 
 [![Play Online](https://img.shields.io/badge/Play-Online-brightgreen)](https://creator-game.onrender.com/)
 [![Python](https://img.shields.io/badge/Python-Game_Engine-blue)](https://www.python.org/)
