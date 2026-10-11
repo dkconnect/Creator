@@ -55,7 +55,13 @@ class LearningAI(BaseAI):
     ) -> float:
         pattern_w, capture_w, prox_w = weights
         score = 0.0
+        # Protect formation cells already occupied by our pawns.
+        currently_on_pattern = (pawn.row, pawn.col) in target_cells
+        landing_on_pattern = (target_row, target_col) in target_cells
 
+        if currently_on_pattern and not landing_on_pattern:
+            score -= pattern_w
+            
         # Pattern tile occupation
         if (target_row, target_col) in target_cells:
             score += pattern_w

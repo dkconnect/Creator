@@ -41,7 +41,7 @@ class BasicAI(BaseAI):
                 score += 60.0
 
         # 3. Don’t abandon a pattern cell you already hold
-        if currently_on_pattern and not landing_on_pattern and not is_capture:
+        if currently_on_pattern and not landing_on_pattern:
             score -= 90.0
 
         # 4. Leave the home rows

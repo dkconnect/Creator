@@ -84,9 +84,13 @@ class AdvancedAI(BaseAI):
             captured.active = True
 
     def _evaluate_human_chance_node(self, game, target_cells: List[Tuple[int, int]]) -> float:
-        """Calculates expected score across all 6 human dice rolls."""
+        """Calculates expected score across all 6 opponent dice rolls."""
         human_player = game.blue if self.team == "RED" else game.red
         expected_score = 0.0
+
+        # Cache evaluations within this candidate board position.
+        # The same opponent move can be legal for multiple dice rolls.
+        evaluation_cache = {}
 
         for d in range(1, 7):
             min_score = float("inf")
@@ -95,24 +99,43 @@ class AdvancedAI(BaseAI):
             for pawn in human_player.pawns:
                 if not pawn.active:
                     continue
-                valid_moves = Movement.get_valid_moves_for_pawn(game, pawn, dice_value=d)
+
+                valid_moves = Movement.get_valid_moves_for_pawn(
+                    game, pawn, dice_value=d
+                )
+
                 for tr, tc in valid_moves:
                     has_move = True
-                    old_r, old_c, cap = self._simulate_move(game, pawn, tr, tc)
-                    board_eval = self._evaluate_static_board(game, target_cells)
-                    self._undo_move(game, pawn, old_r, old_c, tr, tc, cap)
+
+                    # Pawn identity and destination uniquely identify
+                    # an opponent response on this fixed board.
+                    key = (id(pawn), tr, tc)
+
+                    if key not in evaluation_cache:
+                        old_r, old_c, cap = self._simulate_move(
+                            game, pawn, tr, tc
+                        )
+
+                        evaluation_cache[key] = self._evaluate_static_board(
+                            game, target_cells
+                        )
+
+                        self._undo_move(
+                            game, pawn, old_r, old_c, tr, tc, cap
+                        )
+
+                    board_eval = evaluation_cache[key]
 
                     if board_eval < min_score:
                         min_score = board_eval
 
             if not has_move:
-                # Human had no moves on this roll
                 min_score = self._evaluate_static_board(game, target_cells)
 
-            expected_score += (1.0 / 6.0) * min_score
+            expected_score += min_score / 6.0
 
         return expected_score
-
+        
     def select_move(self, game) -> Optional[Tuple[Pawn, int, int]]:
         ai_player = game.red if self.team == "RED" else game.blue
         target_cells = self._get_target_pattern_cells(game)
