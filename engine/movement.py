@@ -1,15 +1,19 @@
 class Movement:
+
     DIRECTIONS = [
         (-1, 0), (1, 0), (0, -1), (0, 1),
         (-1, -1), (-1, 1), (1, -1), (1, 1),
     ]
 
     @staticmethod
-    def get_valid_moves_for_pawn(game, pawn):
-        if pawn is None or not pawn.active or game.dice.value is None:
+    def get_valid_moves_for_pawn(game, pawn, dice_value=None):
+        if pawn is None or not pawn.active:
+            return []
+        roll = game.dice.value if dice_value is None else dice_value
+        if roll is None:
             return []
         moves = []
-        for distance in range(1, max(0, int(game.dice.value)) + 1):
+        for distance in range(1, max(0, int(roll)) + 1):
             for dr, dc in Movement.DIRECTIONS:
                 row = pawn.row + dr * distance
                 col = pawn.col + dc * distance

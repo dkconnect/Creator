@@ -89,14 +89,13 @@ class AdvancedAI(BaseAI):
         expected_score = 0.0
 
         for d in range(1, 7):
-            game.dice.value = d
             min_score = float("inf")
             has_move = False
 
             for pawn in human_player.pawns:
                 if not pawn.active:
                     continue
-                valid_moves = Movement.get_valid_moves_for_pawn(game, pawn)
+                valid_moves = Movement.get_valid_moves_for_pawn(game, pawn, dice_value=d)
                 for tr, tc in valid_moves:
                     has_move = True
                     old_r, old_c, cap = self._simulate_move(game, pawn, tr, tc)
@@ -120,13 +119,11 @@ class AdvancedAI(BaseAI):
 
         best_score = float("-inf")
         best_action = None
-        current_dice = game.dice.value
 
         for pawn in ai_player.pawns:
             if not pawn.active:
                 continue
 
-            game.dice.value = current_dice
             valid_moves = Movement.get_valid_moves_for_pawn(game, pawn)
 
             for target_row, target_col in valid_moves:
@@ -143,10 +140,6 @@ class AdvancedAI(BaseAI):
                         cap
                     )
 
-                    # Human-response simulation may have changed the dice value
-                    # during evaluation of an earlier candidate move.
-                    game.dice.value = current_dice
-
                     return (pawn, target_row, target_col)
 
                 # 2. Expectiminimax evaluation over human response
@@ -160,6 +153,4 @@ class AdvancedAI(BaseAI):
                     best_score = move_score
                     best_action = (pawn, target_row, target_col)
 
-        # Restore actual dice value
-        game.dice.value = current_dice
         return best_action
