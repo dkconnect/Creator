@@ -42,10 +42,25 @@ WIDTH, HEIGHT = 1200, 900
 from ui.viewport import Viewport
 from ui.native_scene import draw_native_scene
 from ui.native_overlays import draw_multiplayer_hud, draw_match_result
+
+ICON_PATH = Path(__file__).resolve().parent / "logo/logo.png"
+
+if ICON_PATH.is_file():
+    creator_icon = pygame.image.load(str(ICON_PATH))
+    pygame.display.set_icon(creator_icon)
+else:
+    print(f"Creator icon not found: {ICON_PATH}")
+
 viewport = Viewport(WIDTH, HEIGHT)
 window = pygame.display.set_mode(viewport.initial_size(), pygame.RESIZABLE)
 screen = pygame.Surface((WIDTH, HEIGHT)).convert()
 pygame.display.set_caption("Creator")
+
+icon_path = Path(__file__).resolve().parent / "logo/logo.png"
+
+if icon_path.exists():
+    icon_surface = pygame.image.load(str(icon_path))
+    pygame.display.set_icon(icon_surface)
 
 menu_state = MenuState()
 # Menu is rasterized directly at its final pixel size, not scaled as a bitmap.
