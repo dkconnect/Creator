@@ -88,7 +88,7 @@ def test_basic_ai_prefers_not_to_leave_pattern_cell():
     ai = BasicAI(team="RED")
 
     offset = (game.board.size - game.pattern.size) // 2
-    pattern_cell = (offset, offset)  # (7, 7)
+    pattern_cell = (game.board.size - 1 - offset, offset)  # RED mirrored target (8, 7)
 
     # Deactivate all red pawns first
     for p in game.red.pawns:

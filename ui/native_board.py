@@ -1,9 +1,3 @@
-"""Native-resolution board pass for Creator.
-
-The rest of the interface stays on the virtual canvas for now. All board
-rectangles and circles are rasterized on the physical display surface, with
-the same virtual geometry and input hitboxes as Renderer.
-"""
 import pygame
 from pygame import gfxdraw
 
@@ -54,13 +48,9 @@ def draw_native_board(window, viewport, renderer):
         pygame.draw.rect(window, renderer.EDGE, border,
                          max(1, radius(2)), border_radius=radius(10))
 
-        pattern = game.pattern
-        offset = (size - pattern.size) // 2 if pattern.size else 0
-        target = {(r + offset, c + offset)
-                  for r in range(pattern.size)
-                  for c in range(pattern.size)
-                  if pattern.grid[r][c] == 1}
-
+        from engine.victory import target_cells
+        blue_target = set(target_cells(game, "BLUE"))
+        red_target = set(target_cells(game, "RED"))
         for r in range(size):
             for c in range(size):
                 left, top = bx + c * cell, by + r * cell
@@ -68,8 +58,8 @@ def draw_native_board(window, viewport, renderer):
                 color = (22, 43, 61) if (r+c) % 2 == 0 else (18, 36, 53)
                 pygame.draw.rect(window, color, square)
                 pygame.draw.rect(window, (39, 65, 86), square, 1)
-                if (r, c) in target:
-                    pygame.draw.rect(window, (67, 92, 107), square,
+                if (r, c) in blue_target or (r, c) in red_target:
+                    pygame.draw.rect(window, (155, 118, 184) if (r,c) in blue_target and (r,c) in red_target else renderer.BLUE if (r,c) in blue_target else renderer.RED, square,
                                      max(1, radius(2)))
                     center = (x(left + cell/2), y(top + cell/2))
                     marker = pygame.Rect(center[0] - radius(4),

@@ -84,14 +84,14 @@ def test_moves_down_right():
     assert (11, 11) in moves
 
 
-def test_movement_is_exact_distance():
+def test_movement_allows_up_to_die_distance():
     game, pawn = setup_game_with_pawn(8, 8, 4)
 
     moves = Movement.get_valid_moves(game)
 
     assert (4, 8) in moves
     assert (3, 8) not in moves
-    assert (5, 8) not in moves
+    assert (5, 8) in moves
 
 
 def test_jumping_over_pawns_is_allowed():

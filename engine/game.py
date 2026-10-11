@@ -26,6 +26,8 @@ class Game:
         self.selected_pawn = None
         self.game_over = False
         self.winner = None
+        self.turn_count = 0
+        self.result_reason = None
         self.turn_phase = self.WAITING_FOR_ROLL
         self.ai_controller = ai_controller
 
@@ -271,6 +273,7 @@ class Game:
         if victory.check_victory(self, moving_player):
             self.game_over = True
             self.winner = moving_player
+            self.result_reason = "formation"
             self.turn_phase = None
             return True
 
@@ -295,6 +298,17 @@ class Game:
             self.move_selected_pawn(row, col)
 
     def switch_turn(self):
+        if self.game_over:
+            return
+        self.turn_count += 1
+        if self.turn_count >= victory.TURN_LIMIT:
+            self.winner = victory.endgame_result(self)
+            self.game_over = True
+            self.result_reason = "endgame" if self.winner else "draw"
+            self.selected_pawn = None
+            self.dice.value = None
+            self.turn_phase = None
+            return
         self.current_player = self.red if self.current_player == self.blue else self.blue
         self.selected_pawn = None
         self.dice.value = None
@@ -422,6 +436,10 @@ class Game:
             ),
 
             "game_over": self.game_over,
+            "turn_count": self.turn_count,
+            "turn_limit": victory.TURN_LIMIT,
+            "victory_required": victory.required_count(self),
+            "result_reason": self.result_reason,
 
             "winner": (
                 self.winner.team

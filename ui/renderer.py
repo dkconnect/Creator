@@ -1,9 +1,4 @@
 from ui.viewport import active_mouse_pos
-"""Creator gameplay renderer: modern dark strategy UI.
-
-Retains the public board constants and button rectangles used by InputManager
-and main.py. Works with Game and ClientGameAdapter.
-"""
 import pygame
 
 
@@ -56,16 +51,12 @@ class Renderer:
         pygame.draw.rect(self.screen, self.PANEL, board_rect, border_radius=10)
         pygame.draw.rect(self.screen, self.EDGE, board_rect, 2, border_radius=10)
         self._label('CREATOR   /   TACTICAL BOARD', 33, 31, self.font)
-        self._label('COMPLETE THE PATTERN TO WIN', 470, 38, self.tiny, self.MUTED)
+        self._label('75% FORMATION / 400-TURN LIMIT', 470, 38, self.tiny, self.MUTED)
 
         # Board cells and center victory-pattern target.
-        pattern = self.game.pattern
-        offset = (size - pattern.size) // 2 if pattern.size else 0
-        target = set()
-        for r in range(pattern.size):
-            for c in range(pattern.size):
-                if pattern.grid[r][c] == 1:
-                    target.add((r + offset, c + offset))
+        from engine.victory import target_cells
+        blue_target = set(target_cells(self.game, "BLUE"))
+        red_target = set(target_cells(self.game, "RED"))
         for r in range(size):
             for c in range(size):
                 rect = pygame.Rect(self.BOARD_X + c * self.CELL_SIZE,
@@ -74,8 +65,8 @@ class Renderer:
                 color = (22, 43, 61) if (r + c) % 2 == 0 else (18, 36, 53)
                 pygame.draw.rect(self.screen, color, rect)
                 pygame.draw.rect(self.screen, (39, 65, 86), rect, 1)
-                if (r, c) in target:
-                    pygame.draw.rect(self.screen, (67, 92, 107), rect, 2)
+                if (r, c) in blue_target or (r, c) in red_target:
+                    pygame.draw.rect(self.screen, (155, 118, 184) if (r,c) in blue_target and (r,c) in red_target else self.BLUE if (r,c) in blue_target else self.RED, rect, 2)
                     marker = pygame.Rect(rect.centerx - 4, rect.centery - 4, 8, 8)
                     pygame.draw.rect(self.screen, (91, 127, 146), marker, border_radius=2)
 

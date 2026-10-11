@@ -12,14 +12,9 @@ class LearningAI(BaseAI):
         self.human_captures_count = 0
         self.human_pattern_moves = 0
 
-    def _get_target_pattern_cells(self, game) -> List[Tuple[int, int]]:
-        offset = (game.board.size - game.pattern.size) // 2
-        cells = []
-        for r in range(game.pattern.size):
-            for c in range(game.pattern.size):
-                if game.pattern.grid[r][c] == 1:
-                    cells.append((r + offset, c + offset))
-        return cells
+    def _get_target_pattern_cells(self, game):
+        from engine.victory import target_cells
+        return target_cells(game, self.team)
 
     def record_human_move(self, game, from_pos: Tuple[int, int], to_pos: Tuple[int, int], was_capture: bool):
         """call when human finished the turn."""

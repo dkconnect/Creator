@@ -56,28 +56,28 @@ def test_victory_true_when_pattern_filled_by_same_team():
 def test_victory_false_when_a_required_cell_is_empty():
     game = Game()
     game.pattern = make_pattern(SIMPLE_GRID)
-
     fill_pattern_for_team(game, "BLUE")
-
     offset = centered_offset(game)
+    # With 4 cells, 3 occupied is a win; 2 occupied is not.
     game.board.grid[offset][offset] = None
-
+    assert victory.check_victory(game, game.blue) is True
+    game.board.grid[offset][offset + 1] = None
     assert victory.check_victory(game, game.blue) is False
-
 
 def test_victory_false_when_a_required_cell_belongs_to_opponent():
     game = Game()
     game.pattern = make_pattern(SIMPLE_GRID)
-
     fill_pattern_for_team(game, "BLUE")
-
     offset = centered_offset(game)
+    # An opponent on one of four cells leaves exactly 75% for BLUE.
     game.board.grid[offset][offset] = Pawn(
         id=8000, team="RED", row=offset, col=offset
     )
-
+    assert victory.check_victory(game, game.blue) is True
+    game.board.grid[offset][offset + 1] = Pawn(
+        id=8001, team="RED", row=offset, col=offset + 1
+    )
     assert victory.check_victory(game, game.blue) is False
-
 
 def test_victory_ignores_cells_outside_the_pattern():
     # Cells marked 0 in the pattern shouldn't matter at all, even if

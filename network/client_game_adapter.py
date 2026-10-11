@@ -55,6 +55,8 @@ class ClientGameAdapter:
         self.selected_pawn = None
         self.game_over = False
         self.winner = None
+        self.turn_count = 0
+        self.result_reason = None
 
         self.refresh()
 
@@ -67,6 +69,8 @@ class ClientGameAdapter:
 
         self.dice.value = state.dice
         self.game_over = state.game_over
+        self.turn_count = getattr(state, "turn_count", 0)
+        self.result_reason = getattr(state, "result_reason", None)
 
         pattern = state.pattern or {}
 

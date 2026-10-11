@@ -14,14 +14,9 @@ class AdvancedAI(BaseAI):
         else:
             self.opponent_team = "RED"
 
-    def _get_target_pattern_cells(self, game) -> List[Tuple[int, int]]:
-        offset = (game.board.size - game.pattern.size) // 2
-        cells = []
-        for r in range(game.pattern.size):
-            for c in range(game.pattern.size):
-                if game.pattern.grid[r][c] == 1:
-                    cells.append((r + offset, c + offset))
-        return cells
+    def _get_target_pattern_cells(self, game):
+        from engine.victory import target_cells
+        return target_cells(game, self.team)
 
     def _evaluate_static_board(self, game, target_cells: List[Tuple[int, int]]) -> float:
         """Heuristic board evaluation from the perspective of this AI."""
@@ -33,19 +28,19 @@ class AdvancedAI(BaseAI):
         if victory.check_victory(game, human_player):
             return -10000.0
 
-        ai_pattern_count = 0
-        human_pattern_count = 0
+        # Score each side on its OWN mirrored formation, not both on ours.
+        opponent_targets = victory.target_cells(game, self.opponent_team)
+        ai_pattern_count = sum(
+            (piece := game.board.get_pawn(r, c)) is not None
+            and piece.team == self.team for r, c in target_cells
+        )
+        human_pattern_count = sum(
+            (piece := game.board.get_pawn(r, c)) is not None
+            and piece.team == self.opponent_team for r, c in opponent_targets
+        )
 
-        for r, c in target_cells:
-            pawn = game.board.get_pawn(r, c)
-            if pawn is not None:
-                if pawn.team == self.team:
-                    ai_pattern_count += 1
-                else:
-                    human_pattern_count += 1
-
-        # Base pattern differential
-        score = (ai_pattern_count * 200.0) - (human_pattern_count * 250.0)
+        # Both teams receive the same weight for formation progress.
+        score = (ai_pattern_count - human_pattern_count) * 200.0
 
         # Respawn attrition advantage
         score += (human_player.captures_suffered * 15.0) - (ai_player.captures_suffered * 20.0)

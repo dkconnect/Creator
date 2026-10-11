@@ -10,6 +10,8 @@ class ClientGameState:
 
         self.game_over = False
         self.winner = None
+        self.turn_count = 0
+        self.result_reason = None
 
         self.pattern = None
         self.players = None
@@ -62,6 +64,8 @@ class ClientGameState:
         ]
 
         self.winner = state["winner"]
+        self.turn_count = state.get("turn_count", 0)
+        self.result_reason = state.get("result_reason")
 
         self.pattern = state["pattern"]
         self.players = state["players"]

@@ -1,9 +1,3 @@
-"""Physical-pixel Creator match HUD.
-
-Draws the main match rail directly on the display after the virtual-canvas
-pass. Leaves the multiplayer history area and victory overlays untouched.
-No input hitboxes, game state, or network behavior are changed.
-"""
 from functools import lru_cache
 import pygame
 
@@ -50,7 +44,7 @@ def draw_native_hud(window, viewport, renderer):
     # Redraw all typography on the title bar, avoiding scaled-font ghosts.
     pygame.draw.rect(window, renderer.BG, R(23, 13, 792, 57))
     label("CREATOR   /   TACTICAL BOARD", 33, 31, 23, bold=True)
-    label("COMPLETE THE PATTERN TO WIN", 470, 38, 14,
+    label("75% FORMATION / 400-TURN LIMIT", 470, 38, 14,
           renderer.MUTED, True)
 
     panel(829, 86, 355, 344, 14)
@@ -67,6 +61,12 @@ def draw_native_hud(window, viewport, renderer):
           23, renderer.GOLD, True)
     label("VICTORY PATTERN", 862, 267, 14, renderer.MUTED, True)
     label(str(game.pattern.name or "—"), 862, 291, 23, bold=True)
+
+    from engine.victory import progress, required_count, TURN_LIMIT
+    blue, _ = progress(game, "BLUE")
+    red, _ = progress(game, "RED")
+    label(f"B {blue} / R {red}  ·  NEED {required_count(game)}  ·  TURN {getattr(game, 'turn_count', 0)}/{TURN_LIMIT}",
+          850, 315, 13, renderer.MUTED, True)
 
     button = renderer.dice_button
     hover = button.collidepoint(viewport.mouse_pos())

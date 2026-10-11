@@ -6,7 +6,7 @@ import pytest
 
 from engine.board import Board
 from engine.pawn import Pawn
-from engine.victory import check_victory
+from engine.victory import check_victory, target_cells, required_count
 
 
 PATTERNS = Path(__file__).resolve().parents[1] / "patterns"
@@ -17,10 +17,8 @@ def _build(path, team="BLUE"):
     data = json.loads(path.read_text(encoding="utf-8"))
     pattern = SimpleNamespace(**data)
     board = Board()
-    offset = (board.size - pattern.size) // 2
-    cells = [(r + offset, c + offset)
-             for r, row in enumerate(pattern.grid)
-             for c, value in enumerate(row) if value == 1]
+    game = SimpleNamespace(board=board, pattern=pattern)
+    cells = target_cells(game, team)
     for pawn_id, (r, c) in enumerate(cells):
         board.place_pawn(Pawn(id=pawn_id, team=team, row=r, col=c))
     game = SimpleNamespace(board=board, pattern=pattern)
@@ -57,21 +55,30 @@ def test_full_pattern_wins_for_its_team_only(path, team):
 
 @pytest.mark.parametrize("path", FILES, ids=lambda p: p.stem)
 @pytest.mark.parametrize("team", ["BLUE", "RED"])
-def test_one_missing_target_prevents_victory(path, team):
+def test_75_percent_boundary(path, team):
     game, cells = _build(path, team)
-    r, c = cells[len(cells)//2]
+    needed = required_count(game)
+    assert needed >= 1
+    for r, c in cells[needed:]:
+        game.board.grid[r][c] = None
+    assert check_victory(game, SimpleNamespace(team=team))
+    r, c = cells[needed - 1]
     game.board.grid[r][c] = None
     assert not check_victory(game, SimpleNamespace(team=team))
 
 
 @pytest.mark.parametrize("path", FILES, ids=lambda p: p.stem)
 @pytest.mark.parametrize("team", ["BLUE", "RED"])
-def test_one_enemy_on_target_prevents_victory(path, team):
+def test_enemy_blocks_only_its_own_target(path, team):
     game, cells = _build(path, team)
-    r, c = cells[len(cells)//2]
+    needed = required_count(game)
+    for r, c in cells[needed:]:
+        game.board.grid[r][c] = None
+    r, c = cells[needed - 1]
     enemy = "RED" if team == "BLUE" else "BLUE"
     game.board.place_pawn(Pawn(id=99, team=enemy, row=r, col=c))
     assert not check_victory(game, SimpleNamespace(team=team))
+    assert set(target_cells(game, "RED")) == {(15-r, c) for r, c in target_cells(game, "BLUE")}
 
 
 @pytest.mark.parametrize("path", FILES, ids=lambda p: p.stem)
