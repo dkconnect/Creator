@@ -1,6 +1,14 @@
+# Python
 __pycache__/
+*.py[cod]
 .pytest_cache/
 .venv/
 venv/
+
+# PyInstaller output
+build/
+dist/
 *.pyc
-.env
+
+# Local files
+*.log
