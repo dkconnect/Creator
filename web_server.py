@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import urlsplit
+from urllib.parse import unquote, urlsplit
 
 from engine.game import Game
 from engine import victory
@@ -267,7 +267,7 @@ class Handler(BaseHTTPRequestHandler):
             return entry
 
     def do_GET(self):
-        path = urlsplit(self.path).path
+        path = unquote(urlsplit(self.path).path)
 
         if path == "/health":
             return self.send_json({
@@ -293,16 +293,24 @@ class Handler(BaseHTTPRequestHandler):
 
         files = {
             "/": (
-                "index.html",
+                WEB / "index.html",
                 "text/html; charset=utf-8"
             ),
             "/app.js": (
-                "app.js",
+                WEB / "app.js",
                 "text/javascript; charset=utf-8"
             ),
             "/style.css": (
-                "style.css",
+                WEB / "style.css",
                 "text/css; charset=utf-8"
+            ),
+            "/logo/logo.png": (
+                ROOT / "logo" / "logo.png",
+                "image/png"
+            ),
+            "/Creator - Official - Rulebook.pdf": (
+                WEB / "Creator - Official - Rulebook.pdf",
+                "application/pdf"
             ),
         }
 
@@ -315,7 +323,7 @@ class Handler(BaseHTTPRequestHandler):
         filename, mime = files[path]
 
         try:
-            body = (WEB / filename).read_bytes()
+            body = filename.read_bytes()
         except OSError:
             logger.exception(
                 "Unable to read web file: %s",
