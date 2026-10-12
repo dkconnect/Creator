@@ -55,8 +55,7 @@ class Renderer:
 
         # Board cells and center victory-pattern target.
         from engine.victory import target_cells
-        blue_target = set(target_cells(self.game, "BLUE"))
-        red_target = set(target_cells(self.game, "RED"))
+        target = set(target_cells(self.game, self.game.current_player.team))
         for r in range(size):
             for c in range(size):
                 rect = pygame.Rect(self.BOARD_X + c * self.CELL_SIZE,
@@ -65,8 +64,8 @@ class Renderer:
                 color = (22, 43, 61) if (r + c) % 2 == 0 else (18, 36, 53)
                 pygame.draw.rect(self.screen, color, rect)
                 pygame.draw.rect(self.screen, (39, 65, 86), rect, 1)
-                if (r, c) in blue_target or (r, c) in red_target:
-                    pygame.draw.rect(self.screen, (155, 118, 184) if (r,c) in blue_target and (r,c) in red_target else self.BLUE if (r,c) in blue_target else self.RED, rect, 2)
+                if (r, c) in target:
+                    pygame.draw.rect(self.screen, (155, 118, 184), rect, 2)
                     marker = pygame.Rect(rect.centerx - 4, rect.centery - 4, 8, 8)
                     pygame.draw.rect(self.screen, (91, 127, 146), marker, border_radius=2)
 

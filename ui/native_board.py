@@ -49,8 +49,7 @@ def draw_native_board(window, viewport, renderer):
                          max(1, radius(2)), border_radius=radius(10))
 
         from engine.victory import target_cells
-        blue_target = set(target_cells(game, "BLUE"))
-        red_target = set(target_cells(game, "RED"))
+        target = set(target_cells(game, game.current_player.team))
         for r in range(size):
             for c in range(size):
                 left, top = bx + c * cell, by + r * cell
@@ -58,8 +57,8 @@ def draw_native_board(window, viewport, renderer):
                 color = (22, 43, 61) if (r+c) % 2 == 0 else (18, 36, 53)
                 pygame.draw.rect(window, color, square)
                 pygame.draw.rect(window, (39, 65, 86), square, 1)
-                if (r, c) in blue_target or (r, c) in red_target:
-                    pygame.draw.rect(window, (155, 118, 184) if (r,c) in blue_target and (r,c) in red_target else renderer.BLUE if (r,c) in blue_target else renderer.RED, square,
+                if (r, c) in target:
+                    pygame.draw.rect(window, (155, 118, 184), square,
                                      max(1, radius(2)))
                     center = (x(left + cell/2), y(top + cell/2))
                     marker = pygame.Rect(center[0] - radius(4),
