@@ -17,7 +17,9 @@ def test_full_formation_only():
     g = Game()
     g.pattern = pattern([[1, 1], [1, 1]])
     targets = victory.target_cells(g, "BLUE")
-    assert targets == victory.target_cells(g, "RED")
+    assert set(victory.target_cells(g, "RED")) == {
+        (g.board.size - 1 - r, c) for r, c in targets
+    }
     for i, (r, c) in enumerate(targets[:3]):
         g.board.place_pawn(Pawn(id=5000+i, team="BLUE", row=r, col=c))
     assert not victory.check_victory(g, g.blue)

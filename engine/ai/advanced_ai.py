@@ -23,38 +23,63 @@ class AdvancedAI(BaseAI):
         ai_player = game.red if self.team == "RED" else game.blue
         human_player = game.blue if self.team == "RED" else game.red
 
-        if victory.check_victory(game, ai_player):
-            return 10000.0
-        if victory.check_victory(game, human_player):
-            return -10000.0
+        # Cache formation coordinates for this game and pattern.
+        pattern_key = (
+            game.board.size,
+            game.pattern.size,
+            tuple(tuple(row) for row in game.pattern.grid),
+        )
 
-        # Score each side on its OWN mirrored formation, not both on ours.
-        opponent_targets = victory.target_cells(game, self.opponent_team)
+        if getattr(self, "_pattern_cache_key", None) != pattern_key:
+            self._pattern_cache_key = pattern_key
+            self._opponent_targets = victory.target_cells(
+                game, self.opponent_team
+            )
+
+        opponent_targets = self._opponent_targets
+
         ai_pattern_count = sum(
             (piece := game.board.get_pawn(r, c)) is not None
-            and piece.team == self.team for r, c in target_cells
+            and piece.team == self.team
+            for r, c in target_cells
         )
+
         human_pattern_count = sum(
             (piece := game.board.get_pawn(r, c)) is not None
-            and piece.team == self.opponent_team for r, c in opponent_targets
+            and piece.team == self.opponent_team
+            for r, c in opponent_targets
         )
 
-        # Both teams receive the same weight for formation progress.
+        # Preserve the exact 100% formation victory condition.
+        if target_cells and ai_pattern_count == len(target_cells):
+            return 10000.0
+
+        if opponent_targets and human_pattern_count == len(opponent_targets):
+            return -10000.0
+
         score = (ai_pattern_count - human_pattern_count) * 200.0
 
-        # Respawn attrition advantage
-        score += (human_player.captures_suffered * 15.0) - (ai_player.captures_suffered * 20.0)
+        # Preserve the existing capture-attrition scoring.
+        score += (
+            human_player.captures_suffered * 15.0
+            - ai_player.captures_suffered * 20.0
+        )
 
-        # Proximity advantage for AI pieces towards empty pattern cells
+        # Preserve the existing proximity scoring.
         empty_targets = [
-            (tr, tc) for tr, tc in target_cells
-            if game.board.get_pawn(tr, tc) is None or game.board.get_pawn(tr, tc).team != self.team
+            (tr, tc)
+            for tr, tc in target_cells
+            if game.board.get_pawn(tr, tc) is None
+            or game.board.get_pawn(tr, tc).team != self.team
         ]
 
         if empty_targets:
             for pawn in ai_player.pawns:
                 if pawn.active and (pawn.row, pawn.col) not in target_cells:
-                    min_dist = min(abs(pawn.row - tr) + abs(pawn.col - tc) for tr, tc in empty_targets)
+                    min_dist = min(
+                        abs(pawn.row - tr) + abs(pawn.col - tc)
+                        for tr, tc in empty_targets
+                    )
                     score -= min_dist * 1.5
 
         return score

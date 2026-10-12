@@ -11,7 +11,10 @@ from engine.ai.advanced_ai import AdvancedAI
 def test_complete_formation_is_required_and_shared_by_both_teams():
     game = Game()
     assert victory.VICTORY_FRACTION == 1.0
-    assert victory.target_cells(game, 'BLUE') == victory.target_cells(game, 'RED')
+    assert set(victory.target_cells(game, 'RED')) == {
+        (game.board.size - 1 - r, c)
+        for r, c in victory.target_cells(game, 'BLUE')
+    }
     assert victory.required_count(game) == len(victory.target_cells(game, 'BLUE'))
 
 

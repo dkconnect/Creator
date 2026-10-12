@@ -1,6 +1,6 @@
 <div align="center">
 
-# CREATOR
+<img src="logo/word.png" width="1000" alt="Kumo No Su logo"/>
 
 **A tactical board game you can never complete**
 

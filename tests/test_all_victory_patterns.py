@@ -78,7 +78,10 @@ def test_enemy_prevents_full_formation(path, team):
     enemy = "RED" if team == "BLUE" else "BLUE"
     game.board.place_pawn(Pawn(id=99, team=enemy, row=r, col=c))
     assert not check_victory(game, SimpleNamespace(team=team))
-    assert set(target_cells(game, "RED")) == set(target_cells(game, "BLUE"))
+    assert set(target_cells(game, "RED")) == {
+        (game.board.size - 1 - r, c)
+        for r, c in target_cells(game, "BLUE")
+    }
 
 
 @pytest.mark.parametrize("path", FILES, ids=lambda p: p.stem)
